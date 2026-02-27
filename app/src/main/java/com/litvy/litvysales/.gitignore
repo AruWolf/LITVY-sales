@@ -1,0 +1,77 @@
+# ===============================
+# ANDROID / GRADLE
+# ===============================
+
+.gradle/
+build/
+app/build/
+local.properties
+.idea/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# ===============================
+# ANDROID STUDIO
+# ===============================
+
+*.iml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/dictionaries
+.idea/vcs.xml
+.idea/assetWizardSettings.xml
+
+# ===============================
+# LOGS
+# ===============================
+
+*.log
+
+# ===============================
+# SYSTEM FILES
+# ===============================
+
+.DS_Store
+Thumbs.db
+
+# ===============================
+# KEYSTORES (MUY IMPORTANTE)
+# ===============================
+
+*.jks
+*.keystore
+
+# ===============================
+# DATABASE EXPORTS (si algún día exportás)
+# ===============================
+
+*.db
+*.sqlite
+*.sqlite3
+
+# ===============================
+# TEST OUTPUT
+# ===============================
+
+/app/reports/
+/app/test-results/
+
+# ===============================
+# KOTLIN
+# ===============================
+
+.kotlin/
+
+# ===============================
+# NAVIGATION SAFE ARGS
+# ===============================
+
+navArgs/
+
+# ===============================
+# MAC
+# ===============================
+
+*.swp
