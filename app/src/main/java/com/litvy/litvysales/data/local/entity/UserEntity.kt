@@ -21,7 +21,11 @@ data class UserEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val name: String,
-    val telephoneNumber: String,
+    val lastname: String,
+    val telephoneNumber: String?,
+    val dni: String?,
+    val birthDate: Long,
+    val address: String,
     val email: String?,
     val passwordHash: String,
 

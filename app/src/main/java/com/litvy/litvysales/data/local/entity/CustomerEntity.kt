@@ -19,6 +19,7 @@ data class CustomerEntity(
     val cuit: String?,
 
     val telephoneNumber: String?,
+    val address: String?,
     val email: String?,
 
     val createdAt: Long

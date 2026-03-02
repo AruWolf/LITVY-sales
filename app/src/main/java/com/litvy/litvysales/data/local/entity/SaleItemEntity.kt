@@ -38,6 +38,7 @@ data class SaleItemEntity(
     val id: Int = 0,
     val saleId: Int,
     val productId: Int,
+    val paymentMethodId: Int,
     val quantity: Double,
     val unitPriceInCents: Long,
     val totalInCents: Long

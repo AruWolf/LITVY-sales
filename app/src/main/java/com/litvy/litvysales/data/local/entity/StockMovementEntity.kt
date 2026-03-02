@@ -42,7 +42,7 @@ data class StockMovementEntity(
 
     val productId: Int,
 
-    val batchId: Int?, // importante ahora
+    val batchId: Int?,
 
     val type: StockMovementType,
 
