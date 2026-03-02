@@ -5,7 +5,13 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.litvy.litvysales.data.local.entity.*
+import com.litvy.litvysales.data.local.entity.catalog.*
+import com.litvy.litvysales.data.local.entity.inventory.*
+import com.litvy.litvysales.data.local.entity.purchases.*
+import com.litvy.litvysales.data.local.entity.sales.*
+import com.litvy.litvysales.data.local.entity.user.*
+import com.litvy.litvysales.data.local.entity.util.*
+import com.litvy.litvysales.data.local.entity.promotion.*
 
 @Database(
     entities = [ // Tables instances
@@ -31,7 +37,13 @@ import com.litvy.litvysales.data.local.entity.*
         PurchaseOrderEntity::class,
         PurchaseOrderItemEntity::class,
         StockBatchEntity::class,
-        StockMovementEntity::class
+        StockMovementEntity::class,
+        PromotionEntity::class,
+        PromotionConditionEntity::class,
+        PromotionTargetEntity::class,
+        PromotionBenefitEntity::class,
+        SalePromotionEntity::class,
+        InvoiceTypeEntity::class
     ],
     version = 1
 )

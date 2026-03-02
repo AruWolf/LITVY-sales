@@ -1,7 +1,7 @@
 package com.litvy.litvysales.data.local.dao
 
 import androidx.room.*
-import com.litvy.litvysales.data.local.entity.*
+import com.litvy.litvysales.data.local.entity.catalog.ProductEntity
 import com.litvy.litvysales.data.local.relation.ProductWithBrand
 import com.litvy.litvysales.data.local.projection.ProductFullProjection
 import kotlinx.coroutines.flow.Flow
@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ProductDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(product: ProductEntity)
 
     @Update
@@ -38,6 +38,17 @@ interface ProductDao {
     @Transaction
     @Query("SELECT * FROM product WHERE id = :productId")
     suspend fun getProductWithBrand(productId: Int): ProductWithBrand?
+
+    @Query("SELECT COUNT(*) FROM product WHERE brandId = :brandId")
+    suspend fun countByBrand(brandId: Int): Int
+
+    @Query("""
+    UPDATE product
+    SET 'active' = 0,
+        updatedAt = :updatedAt
+    WHERE id = :id
+""")
+    suspend fun deactivate(id: Int, updatedAt: Long)
 
     // Concepto de consulta utilizando codigo SQL y un DTO constructor de consulta
     @Query("""

@@ -1,21 +1,23 @@
 package com.litvy.litvysales.data.local.dao
 
 import androidx.room.*
-import com.litvy.litvysales.data.local.entity.CategoryEntity
-import kotlinx.coroutines.flow.Flow
+import com.litvy.litvysales.data.local.entity.catalog.CategoryEntity
 
 @Dao
 interface CategoryDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(category: CategoryEntity)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(category: CategoryEntity): Long
 
     @Update
     suspend fun update(category: CategoryEntity)
 
     @Query("SELECT * FROM category ORDER BY name ASC")
-    fun getAll(): Flow<List<CategoryEntity>>
+    suspend fun getAll(): List<CategoryEntity>
 
     @Query("SELECT * FROM category WHERE id = :id")
     suspend fun getById(id: Int): CategoryEntity?
+
+    @Query("SELECT COUNT(*) FROM category WHERE name = :name")
+    suspend fun countByName(name: String): Int
 }
