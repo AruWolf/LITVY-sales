@@ -1,6 +1,7 @@
 package com.litvy.litvysales.domain.useCase.inventory.stockMovement
 
 import com.litvy.litvysales.data.local.entity.enums.StockMovementType
+import com.litvy.litvysales.data.local.entity.enums.toDomain
 import com.litvy.litvysales.domain.interfaces.catalog.ProductRepository
 import com.litvy.litvysales.domain.interfaces.inventory.StockMovementRepository
 import com.litvy.litvysales.domain.model.inventory.StockMovement
@@ -29,7 +30,7 @@ class GenerateStockMovementUseCase(
             id = null,
             productId = productId,
             batchId = batchId,
-            type = type,
+            type = type.toDomain(),
             quantity = quantity,
             createdAt = System.currentTimeMillis(),
             referenceId = referenceId,

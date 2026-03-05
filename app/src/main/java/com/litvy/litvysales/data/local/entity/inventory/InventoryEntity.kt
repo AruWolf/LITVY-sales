@@ -17,7 +17,7 @@ import com.litvy.litvysales.data.local.entity.catalog.*
 )
 data class InventoryEntity(
     @PrimaryKey
-    val productId: Long,
+    val productId: Int,
 
     val stock: Double,
 

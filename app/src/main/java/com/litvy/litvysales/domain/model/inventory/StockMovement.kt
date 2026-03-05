@@ -1,6 +1,6 @@
 package com.litvy.litvysales.domain.model.inventory
 
-import com.litvy.litvysales.data.local.entity.enums.StockMovementType
+import com.litvy.litvysales.domain.model.enums.StockMovementType
 
 data class StockMovement(
     val id: Int? = 0,

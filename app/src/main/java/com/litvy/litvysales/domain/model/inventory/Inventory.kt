@@ -1,7 +1,7 @@
 package com.litvy.litvysales.domain.model.inventory
 
 data class Inventory(
-    val productId: Long,
+    val productId: Int,
 
     val stock: Double,
 
