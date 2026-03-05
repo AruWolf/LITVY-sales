@@ -28,7 +28,7 @@ import com.litvy.litvysales.data.local.entity.purchases.PurchaseItemEntity
 data class StockBatchEntity(
 
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    val id: Int? = 0,
 
     val productId: Int,
 

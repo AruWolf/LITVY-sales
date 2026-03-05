@@ -24,8 +24,8 @@ data class UserEntity(
     val lastname: String,
     val telephoneNumber: String?,
     val dni: String?,
-    val birthDate: Long,
-    val address: String,
+    val birthDate: Long?,
+    val address: String?,
     val email: String?,
     val passwordHash: String,
 

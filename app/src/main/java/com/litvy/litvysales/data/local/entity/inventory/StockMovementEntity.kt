@@ -40,7 +40,7 @@ import com.litvy.litvysales.data.local.entity.user.UserEntity
 data class StockMovementEntity(
 
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    val id: Int? = 0,
 
     val productId: Int,
 

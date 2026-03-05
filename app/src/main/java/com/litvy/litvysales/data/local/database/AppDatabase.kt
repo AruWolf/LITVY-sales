@@ -5,6 +5,15 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.litvy.litvysales.data.local.dao.catalog.BrandDao
+import com.litvy.litvysales.data.local.dao.catalog.CategoryDao
+import com.litvy.litvysales.data.local.dao.catalog.ProductDao
+import com.litvy.litvysales.data.local.dao.catalog.SubCategoryDao
+import com.litvy.litvysales.data.local.dao.inventory.InventoryDao
+import com.litvy.litvysales.data.local.dao.inventory.StockBatchDao
+import com.litvy.litvysales.data.local.dao.inventory.StockMovementDao
+import com.litvy.litvysales.data.local.dao.user.RoleDao
+import com.litvy.litvysales.data.local.dao.user.UserDao
 import com.litvy.litvysales.data.local.entity.catalog.*
 import com.litvy.litvysales.data.local.entity.inventory.*
 import com.litvy.litvysales.data.local.entity.purchases.*
@@ -37,6 +46,7 @@ import com.litvy.litvysales.data.local.entity.promotion.*
         PurchaseOrderEntity::class,
         PurchaseOrderItemEntity::class,
         StockBatchEntity::class,
+        InventoryEntity::class,
         StockMovementEntity::class,
         PromotionEntity::class,
         PromotionConditionEntity::class,
@@ -66,4 +76,14 @@ abstract class AppDatabase: RoomDatabase(){
             }
         }
 }
+
+    abstract fun inventoryDao(): InventoryDao
+    abstract fun stockBatchDao(): StockBatchDao
+    abstract fun stockMovementDao(): StockMovementDao
+    abstract fun categoryDao(): CategoryDao
+    abstract fun subCategoryDao(): SubCategoryDao
+    abstract fun brandDao(): BrandDao
+    abstract fun productDao(): ProductDao
+    abstract fun roleDao(): RoleDao
+    abstract fun userDao(): UserDao
 }

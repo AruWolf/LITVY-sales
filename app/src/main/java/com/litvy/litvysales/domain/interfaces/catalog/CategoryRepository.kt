@@ -10,6 +10,8 @@ interface CategoryRepository {
 
     suspend fun getById(id: Int): Category?
 
+    suspend fun existsById(id: Int): Boolean
+
     suspend fun getAll(): List<Category>
 
     suspend fun existsByName(name: String): Boolean
