@@ -8,7 +8,7 @@ import com.litvy.litvysales.domain.model.inventory.StockMovement
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class StockMovementRepository(
+class StockMovementRepositoryImpl(
     private val stockMovementDao: StockMovementDao
 ): StockMovementRepository {
 

@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 interface UserDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(user: UserEntity)
+    suspend fun insert(user: UserEntity): Long
 
     @Update
     suspend fun update(user: UserEntity)
@@ -20,12 +20,15 @@ interface UserDao {
     @Query("SELECT * FROM user WHERE id = :userId")
     suspend fun getById(userId: Int): UserEntity?
 
-    @Query("SELECT * FROM user WHERE email = :email")
-    suspend fun getByEmail(email: String): UserEntity?
-
     @Query("SELECT * FROM user WHERE active = 1")
     fun getActiveUsers(): Flow<List<UserEntity>>
 
-    @Query("SELECT COUNT(*) FROM user WHERE email = :email")
-    suspend fun countByEmail(email: String): Int
+    @Query("SELECT * FROM user ORDER BY createdAt DESC")
+    fun getAll(): Flow<List<UserEntity>>
+
+    @Query("SELECT * FROM user WHERE roleId = :roleId")
+    fun getByRole(roleId: Int): Flow<List<UserEntity?>>
+
+    @Query("SELECT * FROM user WHERE name = :name AND lastname = :lastName")
+    fun getByName(name: String, lastName: String): Flow<UserEntity?>
 }

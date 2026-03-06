@@ -5,10 +5,11 @@ import com.litvy.litvysales.domain.model.inventory.Inventory
 import kotlinx.coroutines.flow.Flow
 
 class GetInventoryByProductUseCase(
-    private val repository: InventoryRepository
+    private val inventoryRepository: InventoryRepository
 ) {
-    operator fun invoke(productId: Int): Flow<Inventory?>{
-        return repository.getInventoryByProduct(productId)
+
+    operator fun invoke(productId: Int): Flow<Inventory?> {
+        return inventoryRepository.getInventoryByProduct(productId)
     }
 
 }

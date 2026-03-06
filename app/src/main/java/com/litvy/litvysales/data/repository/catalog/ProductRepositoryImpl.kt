@@ -8,7 +8,7 @@ import com.litvy.litvysales.domain.model.catalog.Product
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class ProductRepository(
+class ProductRepositoryImpl(
     private val productDao: ProductDao
 ): ProductRepository {
     override suspend fun insert(product: Product) {

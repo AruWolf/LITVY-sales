@@ -1,0 +1,17 @@
+package com.litvy.litvysales.data.local.dao.purchases
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import com.litvy.litvysales.data.local.entity.purchases.PurchaseOrderItemEntity
+
+@Dao
+interface PurchaseOrderItemDao {
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(purchaseOrderItem: PurchaseOrderItemEntity)
+
+    @Query("SELECT * FROM purchaseOrderItem WHERE id = :id")
+    suspend fun getById(id: Int): PurchaseOrderItemEntity?
+}

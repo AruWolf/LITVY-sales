@@ -7,7 +7,7 @@ import com.litvy.litvysales.domain.model.inventory.Inventory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class InventoryRepository(
+class InventoryRepositoryImpl(
     private val inventoryDao: InventoryDao,
 ): InventoryRepository {
     override fun getInventoryByProduct(productId: Int): Flow<Inventory?> {

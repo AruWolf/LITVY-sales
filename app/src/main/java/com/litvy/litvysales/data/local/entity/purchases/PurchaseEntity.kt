@@ -40,5 +40,6 @@ data class PurchaseEntity(
     val totalDiscountInCents: Long,
     val totalTaxInCents: Long,
     val totalInCents: Long,
-    val createdAt: Long
+    val createdAt: Long,
+    val createdBy: Int
 )

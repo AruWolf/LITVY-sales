@@ -7,7 +7,7 @@ import com.litvy.litvysales.data.mapper.catalog.toEntity
 import com.litvy.litvysales.domain.model.catalog.Category
 import com.litvy.litvysales.domain.interfaces.catalog.CategoryRepository
 
-class CategoryRepository(
+class CategoryRepositoryImpl(
     private val categoryDao: CategoryDao,
     private val subCategoryDao: SubCategoryDao
 ) : CategoryRepository {

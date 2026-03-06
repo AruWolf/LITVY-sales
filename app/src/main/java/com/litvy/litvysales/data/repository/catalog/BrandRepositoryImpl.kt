@@ -7,7 +7,7 @@ import com.litvy.litvysales.data.mapper.catalog.toEntity
 import com.litvy.litvysales.domain.interfaces.catalog.BrandRepository
 import com.litvy.litvysales.domain.model.catalog.Brand
 
-class BrandRepository(
+class BrandRepositoryImpl(
     private val brandDao: BrandDao,
     private val productDao: ProductDao
 ): BrandRepository{

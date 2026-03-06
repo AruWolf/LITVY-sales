@@ -8,7 +8,7 @@ import com.litvy.litvysales.data.mapper.inventory.toEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class StockBatchRepository(
+class StockBatchRepositoryImpl(
     private val stockBatchDao: StockBatchDao
 ): StockBatchRepository {
     override suspend fun loadBatch(batch: StockBatch) {
