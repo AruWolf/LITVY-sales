@@ -1,6 +1,7 @@
 package com.litvy.litvysales.ui.catalog
 
 import com.litvy.litvysales.domain.model.catalog.*
+import com.litvy.litvysales.ui.catalog.enum.CatalogLevel
 
 data class CatalogState(
 

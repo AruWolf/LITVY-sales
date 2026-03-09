@@ -8,6 +8,7 @@ import com.litvy.litvysales.domain.useCase.catalog.brand.*
 import com.litvy.litvysales.domain.useCase.catalog.category.*
 import com.litvy.litvysales.domain.useCase.catalog.product.*
 import com.litvy.litvysales.domain.useCase.catalog.subCategory.*
+import com.litvy.litvysales.ui.catalog.enum.CatalogLevel
 import kotlinx.coroutines.launch
 
 class CatalogViewModel(
@@ -54,6 +55,7 @@ class CatalogViewModel(
                         getSubCategories(event.categoryId)
 
                     _state.value = _state.value!!.copy(
+                        level = CatalogLevel.SUBCATEGORIES,
                         selectedCategoryId = event.categoryId,
                         subCategories = subCategories,
                         brands = emptyList(),
@@ -70,6 +72,7 @@ class CatalogViewModel(
                         getBrands(event.subCategoryId)
 
                     _state.value = _state.value!!.copy(
+                        level = CatalogLevel.BRANDS,
                         selectedSubCategoryId = event.subCategoryId,
                         brands = brands,
                         products = emptyList()
@@ -84,11 +87,10 @@ class CatalogViewModel(
                     getProducts(event.brandId)
                         .collect { products ->
 
-                            _state.postValue(
-                                _state.value!!.copy(
-                                    selectedBrandId = event.brandId,
-                                    products = products
-                                )
+                            _state.value = _state.value!!.copy(
+                                level = CatalogLevel.PRODUCTS,
+                                selectedBrandId = event.brandId,
+                                products = products
                             )
                         }
                 }

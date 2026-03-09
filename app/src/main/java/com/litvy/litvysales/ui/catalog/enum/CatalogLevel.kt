@@ -1,4 +1,4 @@
-package com.litvy.litvysales.ui.catalog
+package com.litvy.litvysales.ui.catalog.enum
 
 enum class CatalogLevel {
     CATEGORIES,

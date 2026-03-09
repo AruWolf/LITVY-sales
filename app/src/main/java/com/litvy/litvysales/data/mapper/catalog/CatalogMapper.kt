@@ -13,7 +13,7 @@ fun CategoryEntity.toDomain(): Category =
 
 fun Category.toEntity(): CategoryEntity =
     CategoryEntity(
-        id = id ?: 0,
+        id = id,
         name = name,
         createdAt = createdAt,
         updatedAt = updatedAt
@@ -78,7 +78,7 @@ fun SubCategoryEntity.toDomain(): SubCategory =
 
 fun SubCategory.toEntity(): SubCategoryEntity =
     SubCategoryEntity(
-        id = id ?: 0,
+        id = id,
         name = name,
         categoryId = categoryId,
         createdAt = createdAt,

@@ -23,6 +23,8 @@ sealed class CatalogEvent {
         val name: String,
         val brandId: Int,
         val purchasePrice: Long,
-        val salePrice: Long
+        val salePrice: Long,
+        val hasExpiration: Boolean,
+        val isWeighable: Boolean
     ) : CatalogEvent()
 }

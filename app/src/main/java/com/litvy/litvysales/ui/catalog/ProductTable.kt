@@ -49,7 +49,7 @@ fun ProductTable(
                 Text(product.name, modifier = Modifier.weight(2f))
 
                 Text(
-                    (product.purchasePriceInCents / 100.0).toString(),
+                    String.format("%.2f", product.purchasePriceInCents / 100.0),
                     modifier = Modifier.weight(1f)
                 )
 

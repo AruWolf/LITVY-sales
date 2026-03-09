@@ -4,11 +4,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.litvy.litvysales.LitvySalesApplication
+import com.litvy.litvysales.ui.catalog.enum.CatalogLevel
 
 @Composable
 fun CatalogScreen() {
@@ -127,21 +126,26 @@ fun CatalogScreen() {
 
         CatalogLevel.PRODUCTS -> {
 
-            Column {
+            ProductListScreen(
+                state = state,
+                onBack = {
+                    viewModel.onEvent(CatalogEvent.NavigateBack)
+                },
+                onCreate = { name, purchase, sale, hasExpiration, isWeighable ->
 
-                Button(
-                    onClick = {
-                        viewModel.onEvent(
-                            CatalogEvent.NavigateBack
+                    viewModel.onEvent(
+                        CatalogEvent.CreateProduct(
+                            name = name,
+                            brandId = state.selectedBrandId!!,
+                            purchasePrice = purchase,
+                            salePrice = sale,
+                            hasExpiration = hasExpiration,
+                            isWeighable = isWeighable
                         )
-                    }
-                ){
-                    Text("← Volver")
+                    )
+
                 }
-
-                ProductTable(state = state)
-
-            }
+            )
 
         }
 
