@@ -11,26 +11,11 @@ import kotlinx.coroutines.flow.Flow
 interface PromotionTargetDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(promotionTarget: PromotionTargetEntity)
-
-    @Query("SELECT * FROM promotion_target WHERE id = :id")
-    suspend fun getById(id: Int): PromotionTargetEntity?
+    suspend fun insert(target: PromotionTargetEntity): Long
 
     @Query("SELECT * FROM promotion_target WHERE promotionId = :promotionId")
-    suspend fun getByPromotion(promotionId: Int): PromotionTargetEntity
+    suspend fun getByPromotion(promotionId: Int): List<PromotionTargetEntity>
 
-    @Query("SELECT * FROM promotion_target WHERE productId = :productId ORDER BY id DESC")
-    fun getByProduct(productId: Int): Flow<List<PromotionTargetEntity?>>
-
-    @Query("SELECT * FROM promotion_target WHERE brandId = :brandId ORDER BY id DESC")
-    fun getByBrand(brandId: Int): Flow<List<PromotionTargetEntity?>>
-
-    @Query("SELECT * FROM promotion_target WHERE categoryId = :categoryId ORDER BY id DESC")
-    fun getByCategory(categoryId: Int): Flow<List<PromotionTargetEntity?>>
-
-    @Query("SELECT * FROM promotion_target WHERE batchId = :batchId ORDER BY id DESC")
-    fun getByBatch(batchId: Int): Flow<List<PromotionTargetEntity?>>
-
-    @Query("SELECT * FROM promotion_target ORDER BY id DESC")
-    fun getAll(): Flow<List<PromotionTargetEntity?>>
+    @Query("DELETE FROM promotion_target WHERE id = :id")
+    suspend fun delete(id: Int)
 }

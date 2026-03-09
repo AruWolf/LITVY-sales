@@ -1,6 +1,7 @@
 package com.litvy.litvysales.data.local.entity.promotion
 
 import androidx.room.*
+import com.litvy.litvysales.data.local.entity.enums.PromotionBenefitType
 
 @Entity(
     tableName = "promotion_benefit",
@@ -21,7 +22,7 @@ data class PromotionBenefitEntity(
 
     val promotionId: Int,
 
-    val discountPercentage: Double? = null,
-    val discountAmountInCents: Long? = null,
-    val freeQuantity: Int? = null
+    val type: PromotionBenefitType,
+
+    val value: Long
 )

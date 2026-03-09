@@ -11,5 +11,4 @@ interface PromotionBenefitRepository {
     suspend fun delete(id: Int)
 
     suspend fun getByPromotion(promotionId: Int): List<PromotionBenefit>
-
 }

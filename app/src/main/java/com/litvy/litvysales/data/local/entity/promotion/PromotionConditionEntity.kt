@@ -1,6 +1,7 @@
 package com.litvy.litvysales.data.local.entity.promotion
 
 import androidx.room.*
+import com.litvy.litvysales.data.local.entity.enums.PromotionConditionType
 
 @Entity(
     tableName = "promotion_condition",
@@ -21,10 +22,7 @@ data class PromotionConditionEntity(
 
     val promotionId: Int,
 
-    val minQuantity: Int? = null,
-    val maxQuantity: Int? = null,
+    val type: PromotionConditionType,
 
-    val requiredQuantity: Int? = null, // para 3x2
-
-    val minSubtotalInCents: Long? = null
+    val value: String
 )

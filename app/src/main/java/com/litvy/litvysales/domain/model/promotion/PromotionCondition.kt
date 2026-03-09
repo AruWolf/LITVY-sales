@@ -1,14 +1,14 @@
 package com.litvy.litvysales.domain.model.promotion
 
+import com.litvy.litvysales.domain.model.enums.PromotionConditionType
+
 data class PromotionCondition(
+
     val id: Int = 0,
 
     val promotionId: Int,
 
-    val minQuantity: Int? = null,
-    val maxQuantity: Int? = null,
+    val type: PromotionConditionType,
 
-    val requiredQuantity: Int? = null,
-
-    val minSubtotalInCents: Long? = null
+    val value: String
 )

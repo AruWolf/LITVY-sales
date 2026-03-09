@@ -9,11 +9,9 @@ import com.litvy.litvysales.domain.model.enums.StockMovementType
 import kotlinx.coroutines.flow.first
 
 class CreateSaleUseCase(
-
     private val saleRepository: SaleRepository,
     private val inventoryRepository: InventoryRepository,
     private val stockMovementRepository: StockMovementRepository
-
 ) {
 
     suspend operator fun invoke(

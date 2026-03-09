@@ -11,14 +11,18 @@ import kotlinx.coroutines.flow.Flow
 interface PromotionBenefitDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(promotionBenefit: PromotionBenefitEntity)
-
-    @Query("SELECT * FROM promotion_benefit WHERE id = :id")
-    suspend fun getById(id: Int): PromotionBenefitEntity?
+    suspend fun insert(benefit: PromotionBenefitEntity): Long
 
     @Query("SELECT * FROM promotion_benefit WHERE promotionId = :promotionId")
-    suspend fun getByPromotion(promotionId: Int): PromotionBenefitEntity
+    suspend fun getByPromotion(promotionId: Int): List<PromotionBenefitEntity>
 
-    @Query("SELECT * FROM promotion_benefit ORDER BY id DESC")
-    fun getAll(): Flow<List<PromotionBenefitEntity?>>
+    @Query("DELETE FROM promotion_benefit WHERE id = :id")
+    suspend fun delete(id: Int)
+
+    @Query("UPDATE promotion_benefit SET type = :type, value = :value WHERE id = :id")
+    suspend fun update(
+        id: Int,
+        type: String,
+        value: Long
+    )
 }

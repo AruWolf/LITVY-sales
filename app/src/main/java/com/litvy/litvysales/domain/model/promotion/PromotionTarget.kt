@@ -1,6 +1,7 @@
 package com.litvy.litvysales.domain.model.promotion
 
 data class PromotionTarget(
+
     val id: Int = 0,
 
     val promotionId: Int,

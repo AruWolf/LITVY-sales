@@ -21,11 +21,7 @@ class PromotionRepositoryImpl(
     }
 
     override suspend fun deletePromotion(id: Int) {
-        TODO("Not yet implemented")
-    }
-
-    override fun getActivePromotions(): Flow<List<Promotion>> {
-        return dao.getAllActives().map { list -> list.map {it.toDomain()} }
+        TODO("Implement delete promotion")
     }
 
     override suspend fun getById(id: Int): Promotion? {
@@ -33,6 +29,10 @@ class PromotionRepositoryImpl(
     }
 
     override fun getAll(): Flow<List<Promotion>> {
-        TODO("Not yet implemented")
+        return dao.getAll().map { list -> list.map { it.toDomain() } }
+    }
+
+    override fun getActivePromotions(): Flow<List<Promotion>> {
+        return dao.getAllActives().map { list -> list.map { it.toDomain() } }
     }
 }

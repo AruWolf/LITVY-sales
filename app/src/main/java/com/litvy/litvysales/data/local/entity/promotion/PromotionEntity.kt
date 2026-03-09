@@ -13,14 +13,16 @@ import androidx.room.*
 data class PromotionEntity(
 
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    val id: Int,
 
     val name: String,
     val description: String?,
 
-    val priority: Int = 0,
+    val priority: Int,
+
     val stackable: Boolean = true,
     val active: Boolean = true,
+
     val clearStock: Boolean = false,
 
     val startDate: Long?,

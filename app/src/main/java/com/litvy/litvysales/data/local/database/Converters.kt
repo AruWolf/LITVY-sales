@@ -28,4 +28,14 @@ class Converters {
 
     @TypeConverter
     fun toPurchaseOrderStatus(value: String): PurchaseOrderStatus = PurchaseOrderStatus.valueOf(value)
+
+    @TypeConverter
+    fun fromConditionType(value: PromotionConditionType): String {
+        return value.name
+    }
+
+    @TypeConverter
+    fun toConditionType(value: String): PromotionConditionType {
+        return PromotionConditionType.valueOf(value)
+    }
 }
