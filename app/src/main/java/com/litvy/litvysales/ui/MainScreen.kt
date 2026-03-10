@@ -41,6 +41,9 @@ fun MainScreen() {
                     selected = false,
                     onClick = {
                         navController.navigate("sales")
+                        scope.launch {
+                            drawerState.close()
+                        }
                     },
                     icon = {
                         Icon(Icons.Default.PointOfSale, null)
@@ -52,6 +55,9 @@ fun MainScreen() {
                     selected = false,
                     onClick = {
                         navController.navigate("catalog")
+                        scope.launch {
+                            drawerState.close()
+                        }
                     },
                     icon = {
                         Icon(Icons.Default.Inventory, null)

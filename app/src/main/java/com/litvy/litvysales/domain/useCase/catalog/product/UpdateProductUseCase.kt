@@ -5,12 +5,14 @@ import com.litvy.litvysales.domain.interfaces.catalog.ProductRepository
 class UpdateProductUseCase(
     private val repository: ProductRepository
 ) {
-    suspend fun invoke(
+    suspend operator fun invoke(
         id: Int,
         name: String,
         brandId: Int,
         purchasePriceInCents: Long,
-        salePriceInCents: Long
+        salePriceInCents: Long,
+        hasExpiration: Boolean,
+        isWeighable: Boolean
     ) {
         val product = repository.getById(id)
             ?: throw IllegalArgumentException("Product not found")
@@ -27,7 +29,9 @@ class UpdateProductUseCase(
             brandId = brandId,
             purchasePriceInCents = purchasePriceInCents,
             salePriceInCents = salePriceInCents,
-            updatedAt = System.currentTimeMillis()
+            updatedAt = System.currentTimeMillis(),
+            hasExpiration = hasExpiration,
+            isWeighable = isWeighable
         )
 
         repository.update(updated)

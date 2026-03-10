@@ -1,8 +1,11 @@
-package com.litvy.litvysales.ui.catalog
+package com.litvy.litvysales.ui.catalog.util
 
-import com.litvy.litvysales.domain.model.catalog.*
-import com.litvy.litvysales.ui.catalog.enum.CatalogLevel
+import com.litvy.litvysales.domain.model.catalog.Brand
+import com.litvy.litvysales.domain.model.catalog.Category
+import com.litvy.litvysales.domain.model.catalog.Product
+import com.litvy.litvysales.domain.model.catalog.SubCategory
 
+// Estados accesibles por Catalog Screen
 data class CatalogState(
 
     val level: CatalogLevel = CatalogLevel.CATEGORIES,
@@ -15,6 +18,9 @@ data class CatalogState(
     val selectedCategoryId: Int? = null,
     val selectedSubCategoryId: Int? = null,
     val selectedBrandId: Int? = null,
+    val selectedCategoryName: String? = null,
+    val selectedSubCategoryName: String? = null,
+    val selectedBrandName: String? = null,
 
     val loading: Boolean = false,
     val error: String? = null

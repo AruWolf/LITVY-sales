@@ -16,7 +16,14 @@ class CatalogViewModelFactory(
     private val createCategory: CreateCategoryUseCase,
     private val createSubCategory: CreateSubCategoryUseCase,
     private val createBrand: CreateBrandUseCase,
-    private val createProduct: CreateProductUseCase
+    private val createProduct: CreateProductUseCase,
+
+    private val updateCategory: UpdateCategoryUseCase,
+    private val updateSubCategory: UpdateSubCategoryUseCase,
+    private val updateBrand: UpdateBrandUseCase,
+    private val updateProduct: UpdateProductUseCase
+
+
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -31,7 +38,11 @@ class CatalogViewModelFactory(
                 createCategory,
                 createSubCategory,
                 createBrand,
-                createProduct
+                createProduct,
+                updateCategory,
+                updateSubCategory,
+                updateBrand,
+                updateProduct
             ) as T
         }
 

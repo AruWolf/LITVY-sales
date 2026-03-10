@@ -1,19 +1,31 @@
 package com.litvy.litvysales.ui.catalog
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.litvy.litvysales.LitvySalesApplication
-import com.litvy.litvysales.ui.catalog.enum.CatalogLevel
+import com.litvy.litvysales.ui.catalog.body.CatalogBody
+import com.litvy.litvysales.ui.catalog.builder.buildCatalogSaveEvent
+import com.litvy.litvysales.ui.catalog.dialogs.CatalogDialogs
+import com.litvy.litvysales.ui.catalog.builder.buildEditFormState
+import com.litvy.litvysales.ui.catalog.dialogs.CatalogFormMode
+import com.litvy.litvysales.ui.catalog.header.CatalogHeader
+import com.litvy.litvysales.ui.catalog.util.CatalogLevel
+import com.litvy.litvysales.ui.catalog.header.buildCatalogBreadcrumb
+import com.litvy.litvysales.ui.catalog.model.ProductFormState
+import com.litvy.litvysales.ui.catalog.util.CatalogEvent
+import com.litvy.litvysales.ui.catalog.util.getSelectEvent
+import com.litvy.litvysales.ui.catalog.util.getTitle
 
 @Composable
 fun CatalogScreen() {
 
-    val application = LocalContext.current.applicationContext
-            as LitvySalesApplication
+    val application =
+        LocalContext.current.applicationContext as LitvySalesApplication
 
     val container = application.container
 
@@ -27,127 +39,185 @@ fun CatalogScreen() {
             container.createCategoryUseCase,
             container.createSubCategoryUseCase,
             container.createBrandUseCase,
-            container.createProductUseCase
+            container.createProductUseCase,
+
+            container.updateCategoryUseCase,
+            container.updateSubCategoryUseCase,
+            container.updateBrandUseCase,
+            container.updateProductUseCase
         )
     }
 
     val viewModel: CatalogViewModel = viewModel(factory = factory)
 
-    val state by viewModel.state.observeAsState(CatalogState())
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    // ---------------- UI STATE ----------------
 
-    when(state.level){
+    var formMode by remember { mutableStateOf(CatalogFormMode.CREATE) }
 
-        CatalogLevel.CATEGORIES -> {
+    var showCreateDialog by remember { mutableStateOf(false) }
 
-            CatalogListScreen(
-                title = "Categorías",
-                items = state.categories.map { it.id!! to it.name },
-                emptyMessage = "No hay categorías registradas",
+    var editingId by remember { mutableStateOf<Int?>(null) }
 
-                onItemClick = {
-                    viewModel.onEvent(
-                        CatalogEvent.SelectCategory(it)
-                    )
-                },
+    var nameInput by remember { mutableStateOf("") }
+    var purchaseInput by remember { mutableStateOf("") }
+    var saleInput by remember { mutableStateOf("") }
 
-                onCreate = {
-                    viewModel.onEvent(
-                        CatalogEvent.CreateCategory(it)
-                    )
-                }
-            )
+    var hasExpiration by remember { mutableStateOf(false) }
+    var isWeighable by remember { mutableStateOf(false) }
 
+    // ---------------- BREADCRUMB ----------------
+
+    val breadcrumbItems = buildCatalogBreadcrumb(
+
+        state = state,
+
+        onNavigateCategories = {
+            viewModel.onEvent(CatalogEvent.NavigateToCategories)
+        },
+
+        onNavigateSubCategories = {
+            viewModel.onEvent(CatalogEvent.NavigateToSubCategories)
+        },
+
+        onNavigateBrands = {
+            viewModel.onEvent(CatalogEvent.NavigateToBrands)
         }
 
-        CatalogLevel.SUBCATEGORIES -> {
+    )
 
-            CatalogListScreen(
-                title = "Subcategorías",
+    // ---------------- LAYOUT ----------------
 
-                items = state.subCategories.map { it.id!! to it.name },
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+    ) {
 
-                emptyMessage = "No hay subcategorías",
+        CatalogHeader(
 
-                onItemClick = {
-                    viewModel.onEvent(
-                        CatalogEvent.SelectSubCategory(it))
-                },
+            breadcrumb = breadcrumbItems,
 
-                onCreate = {
-                    viewModel.onEvent(
-                        CatalogEvent.CreateSubCategory(
-                            it,
-                            state.selectedCategoryId!!
-                        )
-                    )
-                },
+            title = getTitle(state.level),
 
-                onBack = {
-                    viewModel.onEvent(
-                        CatalogEvent.NavigateBack
-                    )
-                }
-            )
+            canGoBack = state.level != CatalogLevel.CATEGORIES,
 
-        }
+            onBack = {
+                viewModel.onEvent(CatalogEvent.NavigateBack)
+            },
 
-        CatalogLevel.BRANDS -> {
+            onCreate = {
 
-            CatalogListScreen(
-                title = "Marcas",
+                editingId = null
+                formMode = CatalogFormMode.CREATE
 
-                items = state.brands.map { it.id!! to it.name },
+                nameInput = ""
+                purchaseInput = ""
+                saleInput = ""
+                hasExpiration = false
+                isWeighable = false
 
-                emptyMessage = "No hay marcas",
+                showCreateDialog = true
+            },
 
-                onItemClick = {
-                    viewModel.onEvent(
-                        CatalogEvent.SelectBrand(it)
-                    )
-                },
+            onSearch = {
+                // futura búsqueda
+            }
 
-                onCreate = {
-                    viewModel.onEvent(
-                        CatalogEvent.CreateBrand(
-                            it,
-                            state.selectedSubCategoryId!!
-                        )
-                    )
-                },
+        )
 
-                onBack = {
-                    viewModel.onEvent(
-                        CatalogEvent.NavigateBack
-                    )
-                }
-            )
+        Spacer(Modifier.height(8.dp))
 
-        }
+        CatalogBody(
 
-        CatalogLevel.PRODUCTS -> {
+            state = state,
 
-            ProductListScreen(
-                state = state,
-                onBack = {
-                    viewModel.onEvent(CatalogEvent.NavigateBack)
-                },
-                onCreate = { name, purchase, sale, hasExpiration, isWeighable ->
+            onItemClick = { id ->
+                viewModel.onEvent(
+                    getSelectEvent(state.level, id)
+                )
+            },
 
-                    viewModel.onEvent(
-                        CatalogEvent.CreateProduct(
-                            name = name,
-                            brandId = state.selectedBrandId!!,
-                            purchasePrice = purchase,
-                            salePrice = sale,
-                            hasExpiration = hasExpiration,
-                            isWeighable = isWeighable
-                        )
-                    )
+            onEdit = { id ->
 
-                }
-            )
+                val form = buildEditFormState(id, state)
 
-        }
+                nameInput = form.name
+                purchaseInput = form.purchase
+                saleInput = form.sale
+                hasExpiration = form.hasExpiration
+                isWeighable = form.isWeighable
+
+                editingId = id
+                formMode = CatalogFormMode.EDIT
+                showCreateDialog = true
+            },
+
+            onInspect = { }
+
+        )
 
     }
+
+    // ---------------- DIALOGS ----------------
+
+    CatalogDialogs(
+
+        state = state,
+
+        showCreateDialog = showCreateDialog,
+
+        mode = formMode,
+
+        name = nameInput,
+        purchase = purchaseInput,
+        sale = saleInput,
+
+        hasExpiration = hasExpiration,
+        isWeighable = isWeighable,
+
+        onNameChange = { nameInput = it },
+        onPurchaseChange = { purchaseInput = it },
+        onSaleChange = { saleInput = it },
+
+        onExpirationChange = { hasExpiration = it },
+        onWeighableChange = { isWeighable = it },
+
+        onConfirmCreate = {
+
+            viewModel.onEvent(
+
+                buildCatalogSaveEvent(
+
+                    level = state.level,
+                    editingId = editingId,
+
+                    name = nameInput,
+                    purchase = purchaseInput,
+                    sale = saleInput,
+
+                    hasExpiration = hasExpiration,
+                    isWeighable = isWeighable,
+
+                    selectedCategoryId = state.selectedCategoryId,
+                    selectedSubCategoryId = state.selectedSubCategoryId,
+                    selectedBrandId = state.selectedBrandId
+
+                )
+
+            )
+
+            editingId = null
+            showCreateDialog = false
+
+        },
+
+        onDismissCreate = {
+            showCreateDialog = false
+            editingId = null
+            formMode = CatalogFormMode.CREATE
+        }
+
+    )
+
 }

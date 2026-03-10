@@ -14,7 +14,11 @@ import com.litvy.litvysales.domain.useCase.catalog.subCategory.GetSubCategoriesB
 import com.litvy.litvysales.domain.useCase.catalog.category.CreateCategoryUseCase
 import com.litvy.litvysales.domain.useCase.catalog.subCategory.CreateSubCategoryUseCase
 import com.litvy.litvysales.domain.useCase.catalog.brand.CreateBrandUseCase
+import com.litvy.litvysales.domain.useCase.catalog.brand.UpdateBrandUseCase
+import com.litvy.litvysales.domain.useCase.catalog.category.UpdateCategoryUseCase
 import com.litvy.litvysales.domain.useCase.catalog.product.CreateProductUseCase
+import com.litvy.litvysales.domain.useCase.catalog.product.UpdateProductUseCase
+import com.litvy.litvysales.domain.useCase.catalog.subCategory.UpdateSubCategoryUseCase
 
 class AppContainer(context: Context) {
 
@@ -68,5 +72,25 @@ class AppContainer(context: Context) {
         CreateProductUseCase(
             productRepository,
             brandRepository
+        )
+
+    val updateCategoryUseCase =
+        UpdateCategoryUseCase(
+            categoryRepository
+        )
+
+    val updateSubCategoryUseCase =
+        UpdateSubCategoryUseCase(
+            subCategoryRepository
+        )
+
+    val updateBrandUseCase =
+        UpdateBrandUseCase(
+            brandRepository
+        )
+
+    val updateProductUseCase =
+        UpdateProductUseCase(
+            productRepository
         )
 }
