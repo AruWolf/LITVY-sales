@@ -23,5 +23,8 @@ data class CatalogState(
     val selectedBrandName: String? = null,
 
     val loading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val formErrors: Map<String, String> = emptyMap(),
+    val formWarnings: Map<String, String> = emptyMap(),
+    val operationSuccess: Boolean = false
 )

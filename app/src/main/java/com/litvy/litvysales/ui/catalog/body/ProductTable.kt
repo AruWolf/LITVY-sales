@@ -20,9 +20,10 @@ fun ProductTable(
     modifier: Modifier = Modifier
 ) {
 
+    // Tabla
     Column(modifier = modifier.fillMaxHeight()) {
 
-        // HEADER FIJO
+        // Header fijo de la tabla
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -37,7 +38,7 @@ fun ProductTable(
 
         Divider()
 
-        // LISTA SCROLLEABLE
+        // Lista scrolleable
         LazyColumn {
 
             items(state.products) { product ->
@@ -48,13 +49,16 @@ fun ProductTable(
                         .padding(8.dp)
                 ) {
 
+                    //Columna de nombre
                     Text(product.name, modifier = Modifier.weight(2f))
 
+                    //Columna de precio de compra
                     Text(
                         String.format("%.2f", product.purchasePriceInCents / 100.0),
                         modifier = Modifier.weight(1f)
                     )
 
+                    //Columna de precio de venta
                     Text(
                         String.format("%.2f", product.salePriceInCents / 100.0),
                         modifier = Modifier.weight(1f)

@@ -51,6 +51,8 @@ fun CatalogScreen() {
     val viewModel: CatalogViewModel = viewModel(factory = factory)
 
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+
     // ---------------- UI STATE ----------------
 
     var formMode by remember { mutableStateOf(CatalogFormMode.CREATE) }
@@ -65,6 +67,30 @@ fun CatalogScreen() {
 
     var hasExpiration by remember { mutableStateOf(false) }
     var isWeighable by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.operationSuccess) {
+
+        if(state.operationSuccess){
+
+            showCreateDialog = false
+            editingId = null
+
+            viewModel.resetOperationSuccess()
+
+        }
+
+    }
+
+    LaunchedEffect(showCreateDialog) {
+
+        if (showCreateDialog) {
+
+            viewModel.clearFormValidation()
+
+        }
+
+    }
+
 
     // ---------------- BREADCRUMB ----------------
 
@@ -206,10 +232,6 @@ fun CatalogScreen() {
                 )
 
             )
-
-            editingId = null
-            showCreateDialog = false
-
         },
 
         onDismissCreate = {
@@ -218,6 +240,9 @@ fun CatalogScreen() {
             formMode = CatalogFormMode.CREATE
         }
 
+
+
     )
+
 
 }

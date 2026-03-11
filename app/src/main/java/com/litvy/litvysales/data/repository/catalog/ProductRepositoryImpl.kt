@@ -46,6 +46,10 @@ class ProductRepositoryImpl(
         productDao.deactivate(productId, updatedAt)
     }
 
+    override suspend fun activate(productId: Int, updatedAt: Long) {
+        productDao.activate(productId, updatedAt)
+    }
+
     override suspend fun getProductFull(productId: Int): Product {
         TODO("Not yet implemented")
     }

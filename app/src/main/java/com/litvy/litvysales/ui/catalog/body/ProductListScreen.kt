@@ -8,13 +8,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.litvy.litvysales.ui.catalog.util.CatalogState
 
+// Pantalla de construcción de productos
 @Composable
 fun ProductListScreen(
     state: CatalogState,
-    onCreate: (String, Long, Long, Boolean, Boolean) -> Unit
 ) {
-
-
     Column(
         modifier = Modifier
             .fillMaxSize()

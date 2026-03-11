@@ -46,7 +46,10 @@ fun CatalogDialogs(
             onWeighableChange = onWeighableChange,
 
             onConfirm = onConfirmCreate,
-            onDismiss = onDismissCreate
+            onDismiss = onDismissCreate,
+
+            errors = state.formErrors,
+            warnings = state.formWarnings,
         )
 
     }

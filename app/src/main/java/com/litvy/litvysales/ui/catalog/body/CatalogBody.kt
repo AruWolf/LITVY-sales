@@ -5,6 +5,7 @@ import com.litvy.litvysales.ui.catalog.util.CatalogLevel
 import com.litvy.litvysales.ui.catalog.util.CatalogState
 import com.litvy.litvysales.ui.catalog.util.getItems
 
+// Cuerpo/Contenido del catalogo
 @Composable
 fun CatalogBody(
     state: CatalogState,
@@ -13,26 +14,24 @@ fun CatalogBody(
     onInspect: (Int) -> Unit
 ) {
 
+    // Construye la pantalla para los items de producto si nos encontramos en dicho nivel
     if(state.level == CatalogLevel.PRODUCTS){
 
         ProductListScreen(
-            state = state,
-            onCreate = { name, purchase, sale, hasExpiration, isWeighable ->
-                // delega a quien llame
-            }
+            state = state
         )
 
-    } else {
+    } else { // De lo contrario, se construyen los items mediante el diseño de grilla
 
         CatalogGrid(
 
-            items = getItems(state),
+            items = getItems(state), // Items que se obtienen del estado, que consulta los objetos creados en base de datos
 
-            onItemClick = onItemClick,
+            onItemClick = onItemClick, // Evento de click sobre el item
 
-            onEdit = onEdit,
+            onEdit = onEdit, // Evento de edición de item
 
-            onInspect = onInspect
+            onInspect = onInspect // Evento de inspección del item
 
         )
 

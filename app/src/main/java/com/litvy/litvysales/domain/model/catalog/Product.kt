@@ -8,7 +8,7 @@ data class Product(
     val salePriceInCents: Long,
     val hasExpiration: Boolean,
     val isWeighable: Boolean,
-    val active: Boolean,
+    var active: Boolean,
     val createdAt: Long,
     val updatedAt: Long
 )

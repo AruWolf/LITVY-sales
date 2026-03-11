@@ -2,6 +2,9 @@ package com.litvy.litvysales.domain.useCase.catalog.brand
 
 import com.litvy.litvysales.domain.interfaces.catalog.BrandRepository
 import com.litvy.litvysales.domain.model.catalog.Brand
+import com.litvy.litvysales.domain.validation.CommonValidators
+import com.litvy.litvysales.domain.validation.ValidationBuilder
+import com.litvy.litvysales.domain.validation.ValidationResult
 
 class CreateBrandUseCase(
     private val repository: BrandRepository
@@ -10,30 +13,34 @@ class CreateBrandUseCase(
     suspend operator fun invoke(
         name: String,
         subCategoryId: Int
-    ){
+    ): ValidationResult{
         val cleanName = name.trim()
+        val validator = ValidationBuilder()
 
-        require(cleanName.isNotEmpty()){
-            "Brand name cannot be empty"
-        }
+        validator.add(CommonValidators.notBlank("name", cleanName))
 
-        if (repository.existsByNameInSubCategory(cleanName, subCategoryId)){
-            throw IllegalStateException(
-                "Brand already exists in this subCategory"
-            )
-        }
+        validator.check(
+            !repository.existsByNameInSubCategory(cleanName, subCategoryId),
+            "name",
+            "La marca ya existe en la subCategoria"
+        )
+
+        val result = validator.build()
+
+        if (result is ValidationResult.Failure) return result
 
         val now = System.currentTimeMillis()
 
-        val brand = Brand(
+        repository.insert(
+         Brand(
             id = null,
             name = cleanName,
             subCategoryId = subCategoryId,
             createdAt = now,
             updatedAt = now
-        )
+        ))
 
-        repository.insert(brand)
+        return ValidationResult.Success
 
     }
 }

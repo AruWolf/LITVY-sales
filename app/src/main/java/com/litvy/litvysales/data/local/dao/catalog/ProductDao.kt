@@ -59,6 +59,14 @@ interface ProductDao {
 """)
     suspend fun deactivate(id: Int, updatedAt: Long)
 
+    @Query("""
+    UPDATE product
+    SET active = 1,
+        updatedAt = :updatedAt
+    WHERE id = :id
+""")
+    suspend fun activate(id: Int, updatedAt: Long)
+
     // Concepto de consulta utilizando codigo SQL y un DTO constructor de consulta
     @Query("""
     SELECT 

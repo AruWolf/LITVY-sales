@@ -12,6 +12,7 @@ interface ProductRepository {
     suspend fun getProductWithBrand(productId: Int)
     suspend fun countByBrand(brandId: Int): Int
     suspend fun deactivate(productId: Int, updatedAt: Long)
+    suspend fun activate(productId: Int, updatedAt: Long)
     suspend fun getProductFull(productId: Int): Product
     suspend fun getById(productId: Int): Product?
     suspend fun existsByNameInBrandExcludingId(name: String, brandId: Int, productId: Int): Boolean

@@ -3,42 +3,54 @@ package com.litvy.litvysales.domain.useCase.catalog.product
 import com.litvy.litvysales.domain.interfaces.catalog.BrandRepository
 import com.litvy.litvysales.domain.interfaces.catalog.ProductRepository
 import com.litvy.litvysales.domain.model.catalog.Product
+import com.litvy.litvysales.domain.validation.CommonValidators
+import com.litvy.litvysales.domain.validation.ValidationBuilder
+import com.litvy.litvysales.domain.validation.ValidationResult
 
 class CreateProductUseCase(
     private val repository: ProductRepository,
     private val brandRepository: BrandRepository
 ) {
-    suspend fun invoke(name: String,
+    suspend operator fun invoke(name: String,
                        brandId: Int,
                        purchasePriceInCents: Long,
                        salePriceInCents: Long,
                        hasExpiration: Boolean,
                        isWeighable: Boolean,
-                       ){
+                       ): ValidationResult{
 
         val cleanName = name.trim()
+        val validator = ValidationBuilder()
 
-        require(cleanName.isNotEmpty()){
-            "Product name cannot be empty"
-        }
+        validator.add(CommonValidators.notBlank("name", cleanName))
 
-        require(purchasePriceInCents >= 0){
-            "Purchase price cannot be negative"
-        }
+        validator.add(CommonValidators.positive("purchase", purchasePriceInCents))
+        validator.add(CommonValidators.positive("sale", salePriceInCents))
+        validator.add(CommonValidators.notBlank("purchase", purchasePriceInCents.toString()))
+        validator.add(CommonValidators.notBlank("sale", salePriceInCents.toString()))
 
-        require(salePriceInCents >= 0){
-            "Sale price cannot be negative"
-        }
+        validator.checkWarning(salePriceInCents >= purchasePriceInCents,
+            "salePriceInCents",
+            "El precio de venta es menor o igual que el precio de compra"
+        )
 
         val brand = brandRepository.getById(brandId)
             ?: throw IllegalStateException("Brand does not exist")
 
-        if(repository.existsByNameInBrand(cleanName, brandId)){
-            throw IllegalStateException("This product already exists in this brand")
-        }
+        validator.check(
+            !repository.existsByNameInBrand(cleanName,brandId),
+            "name",
+            "El producto ya existe en la Marca"
+            )
+
+        val result = validator.build()
+
+        if(result is ValidationResult.Failure && result.errors.isNotEmpty()) return result
+
         val now = System.currentTimeMillis()
 
-        val product = Product(
+        repository.insert(
+        Product(
             id = null,
             name = cleanName,
             brandId = brandId,
@@ -49,9 +61,9 @@ class CreateProductUseCase(
             active = true, // Al crearse un producto, este siempre empieza activo.
             createdAt = now,
             updatedAt = now
-        )
+        ))
 
-        repository.insert(product)
+        return result
 
     }
 }

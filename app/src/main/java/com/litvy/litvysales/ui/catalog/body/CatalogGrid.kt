@@ -28,7 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-// Diseño de grilla para contexto catalogo
+// Diseño de grilla para contexto catalogo sobre los niveles -Categoria -SubCategoria y -Marcas
 @Composable
 fun CatalogGrid(
     items: List<Pair<Int,String>>,
@@ -37,20 +37,22 @@ fun CatalogGrid(
     onInspect: (Int) -> Unit
 ) {
 
+    // Grilla en orientación vertical
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(180.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        columns = GridCells.Adaptive(180.dp), // Tamaño de columnas.
+        verticalArrangement = Arrangement.spacedBy(12.dp), // Espaciado de los elementos verticalmente
+        horizontalArrangement = Arrangement.spacedBy(12.dp) // Espaciado de los elementos horizontalmente
     ) {
 
-        items(items) { item ->
+        items(items) { item -> // Items que se van a construir en la grilla
 
+            // Propiedades de cada elemento de la grilla
             CatalogCard(
-                id = item.first,
-                name = item.second,
-                onClick = onItemClick,
-                onEdit = onEdit,
-                onInspect = onInspect
+                id = item.first, // Asignación de numero identificador(id)
+                name = item.second, // Nombre que figura en la carta
+                onClick = onItemClick, // Evento de click sobre el elemento
+                onEdit = onEdit, // Evento de edición
+                onInspect = onInspect // Evento de inspección
             )
 
         }
@@ -71,8 +73,8 @@ fun CatalogCard(
 
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp),
+            .fillMaxWidth() // Rellena el tamaño maximo horizontalmente posible
+            .height(80.dp), // Altura de cada elemento de la grilla
         onClick = { onClick(id) }
     ) {
 
@@ -91,6 +93,7 @@ fun CatalogCard(
 
             Spacer(Modifier.width(12.dp))
 
+            // Compose del nombre del item
             Text(
                 text = name,
                 style = MaterialTheme.typography.titleMedium
@@ -117,14 +120,16 @@ fun ItemMenu(
         IconButton(
             onClick = { expanded = true }
         ) {
-            Icon(Icons.Default.Settings, contentDescription = "Opciones")
+            Icon(Icons.Default.Settings, contentDescription = "Opciones") // Icono de configuración
         }
 
+        // Lista desplegable de opciones
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
 
+            // Item de edita
             DropdownMenuItem(
                 text = { Text("Editar") },
                 onClick = {
@@ -133,6 +138,7 @@ fun ItemMenu(
                 }
             )
 
+            // Item de ver datos
             DropdownMenuItem(
                 text = { Text("Ver datos") },
                 onClick = {
