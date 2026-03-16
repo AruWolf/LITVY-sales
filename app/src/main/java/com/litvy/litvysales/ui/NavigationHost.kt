@@ -6,6 +6,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import com.litvy.litvysales.ui.catalog.CatalogScreen
 import com.litvy.litvysales.ui.sales.SalesScreen
+import com.litvy.litvysales.ui.purchases.PurchaseScreen
+import com.litvy.litvysales.ui.purchases.purchaseCreate.PurchaseCreateRoute
 
 @Composable
 fun NavigationHost(
@@ -25,6 +27,14 @@ fun NavigationHost(
 
         composable("catalog") {
             CatalogScreen()
+        }
+
+        composable("purchases") {
+            PurchaseScreen(navController)
+        }
+
+        composable("purchaseCreate") {
+            PurchaseCreateRoute()
         }
 
     }

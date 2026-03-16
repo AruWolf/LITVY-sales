@@ -3,6 +3,7 @@ package com.litvy.litvysales.ui.catalog.builder
 import com.litvy.litvysales.ui.catalog.util.CatalogEvent
 import com.litvy.litvysales.ui.catalog.util.CatalogLevel
 
+// Constructor de eventos de almacenamiento
 fun buildCatalogSaveEvent(
 
     level: CatalogLevel,
@@ -33,50 +34,59 @@ fun buildCatalogSaveEvent(
 
     return when(level){
 
+        // NIVEL CATEGORIA
         CatalogLevel.CATEGORIES ->
 
+            // Validación para determinar si se trata de un evento de creación o edición
+            // Condición: Si el valor editingId esta vació Crear categoria, si no editarla, proveyendo dicho id.
             if(editingId == null)
                 CatalogEvent.CreateCategory(name)
             else
                 CatalogEvent.UpdateCategory(editingId, name)
 
-
+        // NIVEL SUBCATEGORIA
         CatalogLevel.SUBCATEGORIES ->
 
+            // Validación para determinar si se trata de un evento de creación o edición
+            // Condición: Si el valor editingId esta vació Crear categoria, si no editarla, proveyendo dicho id.
             if(editingId == null)
                 CatalogEvent.CreateSubCategory(
                     name,
-                    selectedCategoryId!!
+                    selectedCategoryId!! // Recibe el id de la categoria a la que pertenece
                 )
             else
                 CatalogEvent.UpdateSubCategory(
                     editingId,
                     name,
-                    selectedCategoryId!!
+                    selectedCategoryId!! // Recibe el id de la categoria a la que pertenece
                 )
 
-
+        // NIVEL MARCA
         CatalogLevel.BRANDS ->
 
+            // Validación para determinar si se trata de un evento de creación o edición
+            // Condición: Si el valor editingId esta vació Crear categoria, si no editarla, proveyendo dicho id.
             if(editingId == null)
                 CatalogEvent.CreateBrand(
                     name,
-                    selectedSubCategoryId!!
+                    selectedSubCategoryId!! // Recibe el id de la subCategoria a la que pertenece
                 )
             else
                 CatalogEvent.UpdateBrand(
                     editingId,
                     name,
-                    selectedSubCategoryId!!
+                    selectedSubCategoryId!! // Recibe el id de la subCategoria a la que pertenece
                 )
 
-
+        // NIVEL PRODUCTO
         CatalogLevel.PRODUCTS ->
 
+            // Validación para determinar si se trata de un evento de creación o edición
+            // Condición: Si el valor editingId esta vació Crear categoria, si no editarla, proveyendo dicho id.
             if(editingId == null)
                 CatalogEvent.CreateProduct(
                     name,
-                    selectedBrandId!!,
+                    selectedBrandId!!, // Id de la marca a la que pertenece
                     purchaseCents,
                     saleCents,
                     hasExpiration,
@@ -86,7 +96,7 @@ fun buildCatalogSaveEvent(
                 CatalogEvent.UpdateProduct(
                     editingId,
                     name,
-                    selectedBrandId!!,
+                    selectedBrandId!!, // Id de la marca a la que pertenece
                     purchaseCents,
                     saleCents,
                     hasExpiration,

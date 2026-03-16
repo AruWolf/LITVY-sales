@@ -3,6 +3,7 @@ package com.litvy.litvysales.ui.catalog.dialogs
 import androidx.compose.runtime.Composable
 import com.litvy.litvysales.ui.catalog.util.CatalogState
 
+// Metodo compose para generar el compose Dialog para creación/edición de elementos del catalogo
 @Composable
 fun CatalogDialogs(
     state: CatalogState,
@@ -25,8 +26,10 @@ fun CatalogDialogs(
     onDismissCreate: () -> Unit
 ) {
 
+    // Creación del entorno Dialog para creación, en caso de ser requerido
     if (showCreateDialog) {
 
+        // Metodo compose que contiene el diseño y lógica del formulario de creación/edición de componentes del catalogo
         CatalogCreateDialog(
 
             mode = mode,

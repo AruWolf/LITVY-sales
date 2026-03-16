@@ -10,11 +10,13 @@ data class CatalogState(
 
     val level: CatalogLevel = CatalogLevel.CATEGORIES,
 
+    // Objetos y sus propiedades, para creación, edición y consulta.
     val categories: List<Category> = emptyList(),
     val subCategories: List<SubCategory> = emptyList(),
     val brands: List<Brand> = emptyList(),
     val products: List<Product> = emptyList(),
 
+    // Estados de selección de un item.
     val selectedCategoryId: Int? = null,
     val selectedSubCategoryId: Int? = null,
     val selectedBrandId: Int? = null,
@@ -22,7 +24,9 @@ data class CatalogState(
     val selectedSubCategoryName: String? = null,
     val selectedBrandName: String? = null,
 
-    val loading: Boolean = false,
+    val loading: Boolean = false, // Estado de carga
+
+    // Estados para manejar errores, advertencias y operaciones exitosas
     val error: String? = null,
     val formErrors: Map<String, String> = emptyMap(),
     val formWarnings: Map<String, String> = emptyMap(),

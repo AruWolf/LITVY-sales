@@ -73,6 +73,20 @@ fun MainScreen() {
                     }
                 )
 
+                NavigationDrawerItem(
+                    label = { Text("Compras") },
+                    selected = false,
+                    onClick = {
+                        navController.navigate("purchases")
+                        scope.launch {
+                            drawerState.close()
+                        }
+                    },
+                    icon = {
+                        Icon(Icons.Default.Inventory, null)
+                    }
+                )
+
             }
 
         }
