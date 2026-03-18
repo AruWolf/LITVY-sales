@@ -66,4 +66,8 @@ class ProductRepositoryImpl(
         return productDao.countByName(name, brandId) > 0
     }
 
+    override suspend fun existsById(id: Int): Boolean {
+        return productDao.existsById(id) > 0
+    }
+
 }

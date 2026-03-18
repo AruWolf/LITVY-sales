@@ -1,6 +1,8 @@
 package com.litvy.litvysales.domain.interfaces.sales
 
+import com.litvy.litvysales.domain.filter.CashSessionFilter
 import com.litvy.litvysales.domain.model.sales.CashSession
+import kotlinx.coroutines.flow.Flow
 
 interface CashSessionRepository {
 
@@ -12,9 +14,5 @@ interface CashSessionRepository {
 
     suspend fun getOpenSessionByRegister(registerId: Int): CashSession?
 
-    suspend fun getSessionsByPeriod(
-        startDate: Long,
-        endDate: Long
-    ): List<CashSession>
-
+    fun getSessions(filter: CashSessionFilter): Flow<List<CashSession?>>
 }

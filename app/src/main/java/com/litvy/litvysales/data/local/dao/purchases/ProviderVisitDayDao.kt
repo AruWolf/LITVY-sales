@@ -1,7 +1,6 @@
 package com.litvy.litvysales.data.local.dao.purchases
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -15,8 +14,8 @@ interface ProviderVisitDayDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(providerVisitDay: ProviderVisitDayEntity)
 
-    @Delete
-    suspend fun delete(id: Int)
+    @Query("DELETE FROM provider_visit_day WHERE providerId = :providerId")
+    suspend fun deleteByProvider(providerId: Int)
 
     @Update
     suspend fun update(providerVisitDay: ProviderVisitDayEntity)

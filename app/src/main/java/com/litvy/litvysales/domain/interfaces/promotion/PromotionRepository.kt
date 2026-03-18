@@ -1,5 +1,6 @@
 package com.litvy.litvysales.domain.interfaces.promotion
 
+import com.litvy.litvysales.domain.filter.promotion.PromotionFilter
 import com.litvy.litvysales.domain.model.promotion.*
 import kotlinx.coroutines.flow.Flow
 
@@ -15,6 +16,6 @@ interface PromotionRepository {
 
     fun getAll(): Flow<List<Promotion>>
 
-    fun getActivePromotions(): Flow<List<Promotion>>
+    fun getPromotions(filter: PromotionFilter): Flow<List<Promotion?>>
 
 }

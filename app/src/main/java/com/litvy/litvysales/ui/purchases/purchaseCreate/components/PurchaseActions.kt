@@ -12,14 +12,13 @@ import com.litvy.litvysales.ui.purchases.purchaseCreate.PurchaseCreateEvent
 
 @Composable
 fun PurchaseActions(
+    canConfirm: Boolean,
     onEvent: (PurchaseCreateEvent) -> Unit
 ) {
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-
         OutlinedButton(
             onClick = { onEvent(PurchaseCreateEvent.Cancel) }
         ) {
@@ -27,6 +26,7 @@ fun PurchaseActions(
         }
 
         Button(
+            enabled = canConfirm,
             onClick = { onEvent(PurchaseCreateEvent.Confirm) }
         ) {
             Text("Confirmar compra")

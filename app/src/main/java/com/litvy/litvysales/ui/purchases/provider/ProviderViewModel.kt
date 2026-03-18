@@ -1,4 +1,8 @@
 package com.litvy.litvysales.ui.purchases.provider
 
-class ProviderViewModel {
-}
+import androidx.lifecycle.ViewModel
+
+
+class ProviderViewModel : ViewModel(){
+
+    }

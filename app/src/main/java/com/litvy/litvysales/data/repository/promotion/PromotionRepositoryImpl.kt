@@ -1,8 +1,10 @@
 package com.litvy.litvysales.data.repository.promotion
 
 import com.litvy.litvysales.data.local.dao.promotion.PromotionDao
+import com.litvy.litvysales.data.local.query.promotion.PromotionQueryBuilder
 import com.litvy.litvysales.data.mapper.promotion.toEntity
 import com.litvy.litvysales.data.mapper.promotion.toDomain
+import com.litvy.litvysales.domain.filter.promotion.PromotionFilter
 import com.litvy.litvysales.domain.model.promotion.Promotion
 import com.litvy.litvysales.domain.interfaces.promotion.PromotionRepository
 import kotlinx.coroutines.flow.Flow
@@ -32,7 +34,9 @@ class PromotionRepositoryImpl(
         return dao.getAll().map { list -> list.map { it.toDomain() } }
     }
 
-    override fun getActivePromotions(): Flow<List<Promotion>> {
-        return dao.getAllActives().map { list -> list.map { it.toDomain() } }
-    }
+
+    override fun getPromotions(filter: PromotionFilter) =
+        dao.getByFilter(PromotionQueryBuilder.build(filter)).map {
+            list -> list.map { it?.toDomain() }
+        }
 }

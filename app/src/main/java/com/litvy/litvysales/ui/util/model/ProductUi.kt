@@ -8,5 +8,19 @@ data class ProductUi(
 
     val barcode: String?,
 
-    val purchasePrice: Long
+    val purchasePrice: Long,
+
+    val categoryId: Int,
+
+    val categoryName: String,
+
+    val subCategoryId: Int,
+
+    val subCategoryName: String,
+
+    val brandId: Int,
+
+    val brandName: String,
+
+    val active: Boolean = true
 )

@@ -7,13 +7,30 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.litvy.litvysales.data.local.entity.purchases.PurchaseEntity
+import com.litvy.litvysales.data.local.entity.purchases.PurchaseItemEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PurchaseDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(purchase: PurchaseEntity): Long
+    suspend fun insert(purchase: PurchaseEntity, ): Long
+
+    suspend fun insertPurchaseWithItems(
+        purchase: PurchaseEntity,
+        items: List<PurchaseItemEntity>
+    ){
+        val purchaseId = insert(purchase)
+
+        val itemsWithPurchaseId = items.map {
+            it.copy(purchaseId = purchaseId.toInt())
+        }
+
+        insertItems(itemsWithPurchaseId)
+    }
+
+    @Insert
+    suspend fun insertItems(items: List<PurchaseItemEntity>)
 
     @Update
     suspend fun update(purchase: PurchaseEntity)

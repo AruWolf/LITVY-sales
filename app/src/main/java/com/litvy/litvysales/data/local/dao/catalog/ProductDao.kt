@@ -84,4 +84,7 @@ interface ProductDao {
     WHERE p.id = :productId
 """)
     suspend fun getProductFull(productId: Int): ProductFullProjection?
+
+    @Query("SELECT COUNT(*) FROM product WHERE id = :productId")
+    suspend fun existsById(productId: Int): Int
 }

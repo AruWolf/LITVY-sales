@@ -1,7 +1,7 @@
 package com.litvy.litvysales.domain.model.purchases
 
 data class Provider(
-    val id: Int = 0,
+    val id: Int?,
     val name: String,
     val cuit: String?,
     val telephoneNumber: String?,

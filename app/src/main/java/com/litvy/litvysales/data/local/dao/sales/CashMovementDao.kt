@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 interface CashMovementDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun load(cashMovement: CashMovementEntity)
+    suspend fun load(cashMovement: CashMovementEntity): Long
 
     @Query("SELECT * FROM cashMovement WHERE id = :cashMovementId")
     suspend fun getById(cashMovementId: Int): CashMovementEntity?
@@ -21,6 +21,9 @@ interface CashMovementDao {
 
     @Query("SELECT * FROM cashMovement WHERE type = :type ORDER BY createdAt DESC")
     fun getByType(type: String): Flow<List<CashMovementEntity?>>
+
+    @Query("SELECT * FROM cashMovement WHERE createdAt = :createdAt ORDER BY createdAt DESC")
+    fun getByCreationDate(createdAt: Long): Flow<List<CashMovementEntity?>>
 
     @Query("SELECT * FROM cashMovement WHERE createdBy = :userId ORDER BY createdAt DESC")
     fun getByUser(userId: Int): Flow<List<CashMovementEntity?>>

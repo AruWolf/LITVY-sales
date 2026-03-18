@@ -4,6 +4,18 @@ import com.litvy.litvysales.ui.util.model.ProductUi
 
 sealed class AddProductDialogEvent {
 
+    data class SelectCategory(
+        val categoryId: Int?
+    ) : AddProductDialogEvent()
+
+    data class SelectSubCategory(
+        val subCategoryId: Int?
+    ) : AddProductDialogEvent()
+
+    data class SelectBrand(
+        val brandId: Int?
+    ) : AddProductDialogEvent()
+
     data class SearchChanged(
         val query: String
     ) : AddProductDialogEvent()

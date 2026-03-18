@@ -12,13 +12,13 @@ import kotlinx.coroutines.flow.Flow
 interface PurchaseItemDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(purchaseItem: PurchaseItemEntity)
+    suspend fun insert(purchaseItem: PurchaseItemEntity): Long
 
     @Query("SELECT * FROM purchaseItem WHERE id = :id")
     suspend fun getById(id: Int): PurchaseItemEntity?
 
     @Query("SELECT * FROM purchaseItem WHERE purchaseId = :purchaseId")
-    suspend fun getByPurchase(purchaseId: Int): PurchaseItemEntity?
+    suspend fun getByPurchase(purchaseId: Int): Flow<List<PurchaseItemEntity>>
 
     @Query("SELECT * FROM purchaseItem WHERE productId = :productId")
     fun getByProduct(productId: Int): Flow<List<PurchaseItemEntity?>>

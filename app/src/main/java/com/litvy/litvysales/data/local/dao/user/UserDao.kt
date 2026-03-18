@@ -4,8 +4,11 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
 import androidx.room.Update
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.litvy.litvysales.data.local.entity.user.UserEntity
+import com.litvy.litvysales.domain.filter.user.UserFilter
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -31,4 +34,8 @@ interface UserDao {
 
     @Query("SELECT * FROM user WHERE name = :name AND lastname = :lastName")
     fun getByName(name: String, lastName: String): Flow<UserEntity?>
+
+    @RawQuery(observedEntities = [UserEntity::class])
+    fun getByFilter(query: SupportSQLiteQuery): Flow<List<UserEntity?>>
+
 }

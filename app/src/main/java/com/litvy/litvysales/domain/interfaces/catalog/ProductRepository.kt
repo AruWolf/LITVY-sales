@@ -17,4 +17,5 @@ interface ProductRepository {
     suspend fun getById(productId: Int): Product?
     suspend fun existsByNameInBrandExcludingId(name: String, brandId: Int, productId: Int): Boolean
     suspend fun existsByNameInBrand(name: String, brandId: Int): Boolean
+    suspend fun existsById(id: Int): Boolean
 }

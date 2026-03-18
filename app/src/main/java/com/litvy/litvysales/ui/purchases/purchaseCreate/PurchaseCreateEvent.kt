@@ -1,40 +1,58 @@
 package com.litvy.litvysales.ui.purchases.purchaseCreate
 
+import com.litvy.litvysales.ui.components.dialog.AddProductDialogEvent
 import com.litvy.litvysales.ui.util.model.ProviderUi
+import com.litvy.litvysales.ui.util.model.PurchaseOrderUi
 
-sealed class PurchaseCreateEvent {
+sealed interface PurchaseCreateEvent {
 
-    data object Cancel : PurchaseCreateEvent()
+    data object Cancel : PurchaseCreateEvent
 
-    data object Confirm : PurchaseCreateEvent()
+    data object Confirm : PurchaseCreateEvent
 
-    data object AddItem : PurchaseCreateEvent()
+    data object DismissFeedback : PurchaseCreateEvent
 
-    data object OpenProviderSelector : PurchaseCreateEvent()
+    data object OpenAddProductDialog : PurchaseCreateEvent
+
+    data object CloseAddProductDialog : PurchaseCreateEvent
 
     data class RemoveItem(
         val itemId: String
-    ) : PurchaseCreateEvent()
+    ) : PurchaseCreateEvent
 
     data class UpdateQuantity(
-        val itemId: Int,
-        val quantity: Double
-    ) : PurchaseCreateEvent()
+        val itemId: String,
+        val quantity: String
+    ) : PurchaseCreateEvent
 
     data class UpdateUnitPrice(
-        val itemId: Int,
-        val price: Double
-    ) : PurchaseCreateEvent()
+        val itemId: String,
+        val price: String
+    ) : PurchaseCreateEvent
 
     data class SelectProvider(
         val provider: ProviderUi
-    ) : PurchaseCreateEvent()
+    ) : PurchaseCreateEvent
 
     data class SelectInvoiceType(
         val invoiceType: String
-    ) : PurchaseCreateEvent()
+    ) : PurchaseCreateEvent
 
     data class SelectPaymentMethod(
         val paymentMethod: String
-    ) : PurchaseCreateEvent()
+    ) : PurchaseCreateEvent
+
+    data class SelectPurchaseOrder(
+        val purchaseOrder: PurchaseOrderUi?
+    ) : PurchaseCreateEvent
+
+    data object ApplyPurchaseOrderByMerge : PurchaseCreateEvent
+
+    data object ApplyPurchaseOrderByOverwrite : PurchaseCreateEvent
+
+    data object DismissPurchaseOrderConflict : PurchaseCreateEvent
+
+    data class AddProductDialog(
+        val event: AddProductDialogEvent
+    ) : PurchaseCreateEvent
 }

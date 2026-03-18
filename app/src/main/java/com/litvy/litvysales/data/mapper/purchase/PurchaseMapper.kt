@@ -1,6 +1,11 @@
 package com.litvy.litvysales.data.mapper.purchase
 
 import com.litvy.litvysales.data.local.entity.purchases.*
+import com.litvy.litvysales.domain.model.enums.PurchaseOrderStatus
+import com.litvy.litvysales.data.local.relation.ProviderWithVisitDays as dataProviderWithVisitDays
+import com.litvy.litvysales.domain.model.purchases.ProviderWithVisitDays as domainProviderWithVisitDays
+import com.litvy.litvysales.domain.model.enums.PurchaseOrderStatus as domPurchaseOrderStatus
+import com.litvy.litvysales.data.local.entity.enums.PurchaseOrderStatus as dataPurchaseOrderStatus
 import com.litvy.litvysales.domain.model.purchases.*
 
 fun ProviderEntity.toDomain() = Provider(
@@ -19,6 +24,11 @@ fun Provider.toEntity() = ProviderEntity(
     telephoneNumber,
     address,
     email
+)
+
+fun dataProviderWithVisitDays.toDomain() = domainProviderWithVisitDays(
+    provider = provider.toDomain(),
+    visitDays = visitDays.map { it.dayOfWeek }.toSet()
 )
 
 fun ProviderVisitDayEntity.toDomain() = ProviderVisitDay(
@@ -78,8 +88,8 @@ fun PurchaseItemEntity.toDomain() = PurchaseItem(
 )
 
 fun PurchaseItem.toEntity() = PurchaseItemEntity(
-    id,
-    purchaseId,
+    id = 0,
+    purchaseId = 0,
     productId,
     quantity,
     unitPriceInCents
@@ -111,8 +121,24 @@ fun PurchaseOrderItemEntity.toDomain() = PurchaseOrderItem(
 )
 
 fun PurchaseOrderItem.toEntity() = PurchaseOrderItemEntity(
-    id,
-    purchaseOrderId,
+    id = 0,
+    purchaseOrderId = 0,
     productId,
     quantity
 )
+
+fun domPurchaseOrderStatus.toEntity(): dataPurchaseOrderStatus =
+    when(this) {
+        domPurchaseOrderStatus.RECEIVED -> dataPurchaseOrderStatus.RECEIVED
+        domPurchaseOrderStatus.CANCELLED -> dataPurchaseOrderStatus.CANCELLED
+        domPurchaseOrderStatus.PENDING -> dataPurchaseOrderStatus.PENDING
+        domPurchaseOrderStatus.SENT -> dataPurchaseOrderStatus.SENT
+    }
+
+fun dataPurchaseOrderStatus.toDomain(): domPurchaseOrderStatus =
+    when(this) {
+        dataPurchaseOrderStatus.RECEIVED -> domPurchaseOrderStatus.RECEIVED
+        dataPurchaseOrderStatus.CANCELLED -> domPurchaseOrderStatus.CANCELLED
+        dataPurchaseOrderStatus.PENDING -> domPurchaseOrderStatus.PENDING
+        dataPurchaseOrderStatus.SENT -> domPurchaseOrderStatus.SENT
+    }

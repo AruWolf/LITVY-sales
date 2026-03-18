@@ -2,23 +2,42 @@ package com.litvy.litvysales.ui.purchases.purchaseCreate
 
 import com.litvy.litvysales.ui.components.dialog.AddProductDialogState
 import com.litvy.litvysales.ui.util.model.ProviderUi
+import com.litvy.litvysales.ui.util.model.PurchaseOrderUi
 import com.litvy.litvysales.ui.util.model.PurchaseItemUi
 
 data class PurchaseCreateState(
+    val providers: List<ProviderUi> = emptyList(),
+    val invoiceTypeOptions: List<String> = emptyList(),
+    val paymentMethodOptions: List<String> = emptyList(),
+    val purchaseOrders: List<PurchaseOrderUi> = emptyList(),
 
     val provider: ProviderUi? = null,
-
     val invoiceType: String = "",
-
     val paymentMethod: String = "",
+    val selectedPurchaseOrder: PurchaseOrderUi? = null,
+    val pendingPurchaseOrder: PurchaseOrderUi? = null,
 
     val items: List<PurchaseItemUi> = emptyList(),
 
-    val subtotal: Long = 0,
-    val tax: Long = 0,
-    val total: Long = 0,
+    val subtotalInCents: Long = 0,
+    val taxInCents: Long = 0,
+    val totalInCents: Long = 0,
+
+    val providerError: String? = null,
+    val invoiceTypeError: String? = null,
+    val paymentMethodError: String? = null,
+    val itemsError: String? = null,
+    val feedbackMessage: String? = null,
+    val isSubmitting: Boolean = false,
+    val showOrderConflictDialog: Boolean = false,
 
     val showAddProductDialog: Boolean = false,
-
     val addProductState: AddProductDialogState = AddProductDialogState()
-)
+) {
+    val canConfirm: Boolean
+        get() = provider != null &&
+            invoiceType.isNotBlank() &&
+            paymentMethod.isNotBlank() &&
+            items.isNotEmpty() &&
+            !isSubmitting
+}

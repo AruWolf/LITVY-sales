@@ -1,14 +1,17 @@
 package com.litvy.litvysales.domain.interfaces.purchases
 
-import com.litvy.litvysales.domain.model.purchases.Provider
+import com.litvy.litvysales.domain.model.purchases.ProviderWithVisitDays
+import kotlinx.coroutines.flow.Flow
 
 interface ProviderRepository {
 
-    suspend fun create(provider: Provider): Long
+    suspend fun create(provider: ProviderWithVisitDays): Long
 
-    suspend fun update(provider: Provider)
+    suspend fun update(provider: ProviderWithVisitDays)
 
-    suspend fun getById(id: Int): Provider?
+    suspend fun getById(id: Int): ProviderWithVisitDays?
 
-    suspend fun getAll(): List<Provider>
+    fun getByName(name: String): Flow<List<ProviderWithVisitDays>>
+
+    fun getAll(): Flow<List<ProviderWithVisitDays>>
 }

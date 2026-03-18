@@ -30,7 +30,7 @@ data class UserEntity(
     val passwordHash: String,
 
     val roleId: Int,
-    val active: Boolean,
+    val active: Boolean? = null,
 
     val createdAt: Long,
     val updatedAt: Long

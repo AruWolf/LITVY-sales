@@ -1,8 +1,10 @@
 package com.litvy.litvysales.data.repository.user
 
 import com.litvy.litvysales.data.local.dao.user.UserDao
+import com.litvy.litvysales.data.local.query.user.UserQueryBuilder
 import com.litvy.litvysales.data.mapper.user.toEntity
 import com.litvy.litvysales.data.mapper.user.toDomain
+import com.litvy.litvysales.domain.filter.user.UserFilter
 import com.litvy.litvysales.domain.model.user.User
 import com.litvy.litvysales.domain.interfaces.user.UserRepository
 import kotlinx.coroutines.flow.Flow
@@ -27,4 +29,9 @@ class UserRepositoryImpl(
     override suspend fun getAll(): Flow<List<User>> {
         return dao.getAll().map { list -> list.map {it.toDomain()}}
     }
+
+    override fun getUsers(filter: UserFilter) =
+        dao.getByFilter(
+            UserQueryBuilder.build(filter)
+        ).map { list -> list.map {it?.toDomain()}}
 }

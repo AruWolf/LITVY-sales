@@ -4,6 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.litvy.litvysales.data.local.entity.inventory.StockMovementEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -36,4 +38,7 @@ interface StockMovementDao {
 
     @Query("SELECT * FROM stockMovement")
     fun getAllStockMovement(): Flow<List<StockMovementEntity>>
+
+    @RawQuery([StockMovementEntity::class])
+    fun getByFilter(query: SupportSQLiteQuery): Flow<List<StockMovementEntity?>>
 }

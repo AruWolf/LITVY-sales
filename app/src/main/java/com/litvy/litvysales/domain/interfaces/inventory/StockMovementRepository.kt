@@ -1,5 +1,6 @@
 package com.litvy.litvysales.domain.interfaces.inventory
 
+import com.litvy.litvysales.domain.filter.inventory.StockMovementFilter
 import com.litvy.litvysales.domain.model.enums.StockMovementType
 import com.litvy.litvysales.domain.model.inventory.StockMovement
 import kotlinx.coroutines.flow.Flow
@@ -15,4 +16,6 @@ interface StockMovementRepository {
     fun getStockMovementByReference(referenceId: Int): Flow<List<StockMovement>>
     fun getStockMovementByUser(userId: Int): Flow<List<StockMovement>>
     fun getAllStockMovement(): Flow<List<StockMovement>>
+
+    fun getStockMovements(filter: StockMovementFilter): Flow<List<StockMovement?>>
 }

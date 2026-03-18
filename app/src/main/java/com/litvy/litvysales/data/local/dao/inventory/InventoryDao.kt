@@ -10,13 +10,9 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface InventoryDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(inventory: InventoryEntity)
-
     @Query("SELECT * FROM inventory WHERE productId = :productId")
     fun getByProductId(productId: Int): Flow<InventoryEntity?>
 
     @Query("SELECT * FROM inventory")
     fun getAllProductsInventory(): Flow<List<InventoryEntity>>
-
 }
