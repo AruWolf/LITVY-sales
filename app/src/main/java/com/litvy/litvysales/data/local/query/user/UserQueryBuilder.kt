@@ -2,6 +2,7 @@ package com.litvy.litvysales.data.local.query.user
 
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
+import com.litvy.litvysales.data.local.query.appendOrderBy
 import com.litvy.litvysales.domain.filter.user.UserFilter
 
 object UserQueryBuilder {
@@ -11,7 +12,7 @@ object UserQueryBuilder {
         val sql = StringBuilder()
         val args = mutableListOf<Any>()
 
-        sql.append("SELECT * FROM user WHERE 1=1")
+        sql.append("SELECT * FROM user WHERE 1 = 1")
 
         fun add(condition: String, vararg values: Any) {
             sql.append(" AND $condition")
@@ -54,15 +55,30 @@ object UserQueryBuilder {
             add("active = ?", it)
         }
 
-        filter.createdAt?.let {
+        filter.createdAtFrom?.let {
             add("createdAt >= ?", it)
         }
 
-        filter.updatedAt?.let {
+        filter.createdAtTo?.let {
+            add("createdAt <= ?", it)
+        }
+
+        filter.updatedAtFrom?.let {
             add("updatedAt >= ?", it)
         }
 
-        sql.append(" ORDER BY createdAt DESC")
+        filter.updatedAtTo?.let {
+            add("updatedAt <= ?", it)
+        }
+
+        val orderColumn = when (filter.sortBy) {
+            com.litvy.litvysales.domain.filter.user.UserSortBy.CREATED_AT -> "createdAt"
+            com.litvy.litvysales.domain.filter.user.UserSortBy.UPDATED_AT -> "updatedAt"
+            com.litvy.litvysales.domain.filter.user.UserSortBy.NAME -> "name"
+            com.litvy.litvysales.domain.filter.user.UserSortBy.LASTNAME -> "lastname"
+        }
+
+        sql.appendOrderBy(orderColumn, filter.sortDirection)
 
         return SimpleSQLiteQuery(sql.toString(), args.toTypedArray())
     }

@@ -4,3 +4,8 @@ data class ProviderVisitDay(
     val providerId: Int,
     val dayOfWeek: Int
 )
+
+data class ProviderByVisitDay(
+    val dayOfWeek: Int,
+    val provider: Provider
+)

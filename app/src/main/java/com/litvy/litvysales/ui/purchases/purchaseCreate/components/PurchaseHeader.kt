@@ -42,6 +42,23 @@ fun PurchaseHeader(
             }
         )
 
+        OutlinedTextField(
+            value = state.salesRepName,
+            onValueChange = { onEvent(PurchaseCreateEvent.UpdateSalesRepName(it)) },
+            label = { Text("Preventista / vendedor") },
+            modifier = Modifier.fillMaxWidth(),
+            isError = state.salesRepError != null,
+            singleLine = true
+        )
+
+        state.salesRepError?.let {
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {

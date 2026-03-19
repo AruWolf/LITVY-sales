@@ -12,6 +12,7 @@ data class PurchaseCreateState(
     val purchaseOrders: List<PurchaseOrderUi> = emptyList(),
 
     val provider: ProviderUi? = null,
+    val salesRepName: String = "",
     val invoiceType: String = "",
     val paymentMethod: String = "",
     val selectedPurchaseOrder: PurchaseOrderUi? = null,
@@ -24,6 +25,7 @@ data class PurchaseCreateState(
     val totalInCents: Long = 0,
 
     val providerError: String? = null,
+    val salesRepError: String? = null,
     val invoiceTypeError: String? = null,
     val paymentMethodError: String? = null,
     val itemsError: String? = null,
@@ -36,6 +38,7 @@ data class PurchaseCreateState(
 ) {
     val canConfirm: Boolean
         get() = provider != null &&
+            salesRepName.isNotBlank() &&
             invoiceType.isNotBlank() &&
             paymentMethod.isNotBlank() &&
             items.isNotEmpty() &&

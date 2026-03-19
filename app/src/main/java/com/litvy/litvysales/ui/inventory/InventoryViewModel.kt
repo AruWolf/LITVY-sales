@@ -1,15 +1,15 @@
 package com.litvy.litvysales.ui.inventory
 
 import androidx.lifecycle.ViewModel
-import com.litvy.litvysales.domain.useCase.inventory.stockBatch.GetBatchByProductUseCase
 import kotlinx.coroutines.flow.*
 import androidx.lifecycle.viewModelScope
+import com.litvy.litvysales.domain.useCase.inventory.stockBatch.GetStockBatchUseCase
 import com.litvy.litvysales.ui.inventory.model.ExpirationStatus
 import com.litvy.litvysales.ui.inventory.model.StockBatchItem
 import kotlinx.coroutines.launch
 
 class InventoryViewModel(
-    private val getBatchByProductUseCase: GetBatchByProductUseCase
+    private val getBatchByProductUseCase: GetStockBatchUseCase
 ): ViewModel() {
     private val _state = MutableStateFlow(InventoryState())
     val state: StateFlow<InventoryState> = _state
@@ -72,6 +72,7 @@ class InventoryViewModel(
 
         viewModelScope.launch {
 
+            /* TODO: Refactorizar para utilizar get por filtro
             // Caso de uso que trae los lotes según el producto seleccionado, recolectandolos bajo un mapeo,
             // y actualizando el state para mostrarlos en pantalla
             getBatchByProductUseCase(productId)
@@ -96,7 +97,7 @@ class InventoryViewModel(
                     }
 
                 }
-
+            */
         }
 
     }

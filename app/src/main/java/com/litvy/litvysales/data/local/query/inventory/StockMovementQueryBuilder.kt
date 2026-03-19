@@ -2,6 +2,8 @@ package com.litvy.litvysales.data.local.query.inventory
 
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
+import com.litvy.litvysales.data.local.query.appendOrderBy
+import com.litvy.litvysales.data.local.query.appendPagination
 import com.litvy.litvysales.domain.filter.inventory.StockMovementFilter
 
 object StockMovementQueryBuilder {
@@ -27,11 +29,15 @@ object StockMovementQueryBuilder {
         }
 
         filter.type?.let {
-            add("type = ?", it)
+            add("type = ?", it.name)
         }
 
-        filter.createdAt?.let {
-            add("createdAt = ?", it)
+        filter.createdAtFrom?.let {
+            add("createdAt >= ?", it)
+        }
+
+        filter.createdAtTo?.let {
+            add("createdAt <= ?", it)
         }
 
         filter.referenceId?.let {
@@ -46,7 +52,14 @@ object StockMovementQueryBuilder {
             add("createdBy = ?", it)
         }
 
-        sql.append(" ORDER BY createdAt DESC")
+        val orderColumn = when (filter.sortBy) {
+            com.litvy.litvysales.domain.filter.inventory.StockMovementSortBy.CREATED_AT -> "createdAt"
+            com.litvy.litvysales.domain.filter.inventory.StockMovementSortBy.PRODUCT_ID -> "productId"
+            com.litvy.litvysales.domain.filter.inventory.StockMovementSortBy.TYPE -> "type"
+        }
+
+        sql.appendOrderBy(orderColumn, filter.sortDirection)
+        sql.appendPagination(args, filter.limit, filter.offset)
 
         return SimpleSQLiteQuery(sql.toString(), args.toTypedArray())
     }

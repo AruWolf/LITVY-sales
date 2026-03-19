@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 interface StockBatchDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun loadBatch(batch: StockBatchEntity)
+    suspend fun loadBatch(batch: StockBatchEntity): Long
 
     @Query("SELECT * FROM stockBatch WHERE id = :batchId")
     suspend fun getFullBatch(batchId: Int): StockBatchEntity?
@@ -21,7 +21,7 @@ interface StockBatchDao {
     @Query("SELECT EXISTS(SELECT 1 FROM stockBatch WHERE id = :batchId)")
     fun existsById(batchId: Int?): Boolean
 
-    @Query("SELECT EXISTS(SELECT 1 FROM stockBatch WHERE productId = :productId)")
+    @Query("SELECT EXISTS(SELECT 1 FROM stockBatch WHERE id = :batchId AND productId = :productId)")
     fun belongsToProduct(batchId: Int, productId: Int): Boolean
 
     @RawQuery(observedEntities = [StockBatchEntity::class])

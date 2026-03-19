@@ -4,8 +4,10 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
 import androidx.room.Transaction
 import androidx.room.Update
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.litvy.litvysales.data.local.entity.purchases.ProviderEntity
 import com.litvy.litvysales.data.local.entity.purchases.ProviderVisitDayEntity
 import com.litvy.litvysales.data.local.relation.ProviderWithVisitDays
@@ -49,7 +51,8 @@ interface ProviderDao {
         provider: ProviderEntity,
         visitDays: Set<Int>
     ) {
-        val providerId = requireNotNull(provider.id) {
+        val providerId = provider.id
+        require(providerId > 0) {
             "Provider id is required for update"
         }
 
@@ -76,10 +79,10 @@ interface ProviderDao {
     suspend fun getById(id: Int): ProviderWithVisitDays?
 
     @Transaction
-    @Query("SELECT * FROM provider WHERE name = :name COLLATE NOCASE ORDER BY name ASC")
-    fun getByName(name: String): Flow<List<ProviderWithVisitDays>>
-
-    @Transaction
     @Query("SELECT * FROM provider ORDER BY name ASC")
     fun getAll(): Flow<List<ProviderWithVisitDays>>
+
+    @RawQuery([ProviderEntity::class])
+    fun getByFilter(query: SupportSQLiteQuery): Flow<List<ProviderEntity>>
+
 }

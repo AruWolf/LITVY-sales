@@ -2,10 +2,11 @@ package com.litvy.litvysales.data.repository.purchases
 
 import com.litvy.litvysales.data.local.dao.purchases.PurchaseOrderDao
 import com.litvy.litvysales.data.local.dao.purchases.PurchaseOrderItemDao
+import com.litvy.litvysales.data.local.query.purchase.PurchaseOrderQueryBuilder
 import com.litvy.litvysales.data.mapper.purchase.toDomain
 import com.litvy.litvysales.data.mapper.purchase.toEntity
+import com.litvy.litvysales.domain.filter.purchases.PurchaseOrderFilter
 import com.litvy.litvysales.domain.interfaces.purchases.PurchaseOrderRepository
-import com.litvy.litvysales.domain.model.enums.PurchaseOrderStatus
 import com.litvy.litvysales.domain.model.purchases.PurchaseOrder
 import com.litvy.litvysales.domain.model.purchases.PurchaseOrderItem
 
@@ -48,27 +49,12 @@ class PurchaseOrderRepositoryImpl(
         return dao.getAll().map { list -> list.map { it?.toDomain() } }
     }
 
-    override suspend fun getByProvider(providerId: Int): Flow<List<PurchaseOrder?>> {
-        return dao.getByProvider(providerId).map { list -> list.map { it?.toDomain() } }
-    }
-
-    override suspend fun getByStatus(status: PurchaseOrderStatus): Flow<List<PurchaseOrder?>> {
-        return dao.getByStatus(status.toEntity()).map { list -> list.map { it?.toDomain() }}
-    }
-
-    override suspend fun getByExpectedDeliveryDate(expectedDate: Long): Flow<List<PurchaseOrder?>> {
-        return dao.getByExpectedDeliveryDate(expectedDate).map { list -> list.map { it?.toDomain() } }
-    }
-
-    override suspend fun getByCreationDate(creationDate: Long): Flow<List<PurchaseOrder?>> {
-        return dao.getByCreationDate(creationDate).map { list -> list.map { it?.toDomain() }}
-    }
-
-    override suspend fun getByUser(userId: Int): Flow<List<PurchaseOrder?>> {
-        return dao.getByUser(userId).map { list -> list.map { it?.toDomain() }}
-    }
-
     override suspend fun getItemsByOrderId(orderId: Int): Flow<List<PurchaseOrderItem>>{
         return itemDao.getByOrderId(orderId).map { list -> list.map { it.toDomain() } }
     }
+
+    override fun getPurchaseOrders(filter: PurchaseOrderFilter) =
+        dao.getByFilter(PurchaseOrderQueryBuilder.build(filter)).map {
+            list -> list.map { it.toDomain() }
+        }
 }

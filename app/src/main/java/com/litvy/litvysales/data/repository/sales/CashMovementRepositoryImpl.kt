@@ -1,8 +1,10 @@
 package com.litvy.litvysales.data.repository.sales
 
 import com.litvy.litvysales.data.local.dao.sales.CashMovementDao
+import com.litvy.litvysales.data.local.query.sales.CashMovementQueryBuilder
 import com.litvy.litvysales.data.mapper.sales.toDomain
 import com.litvy.litvysales.data.mapper.sales.toEntity
+import com.litvy.litvysales.domain.filter.sales.CashMovementFilter
 import com.litvy.litvysales.domain.interfaces.sales.CashMovementRepository
 import com.litvy.litvysales.domain.model.sales.CashMovement
 import kotlinx.coroutines.flow.Flow
@@ -19,19 +21,10 @@ class CashMovementRepositoryImpl(
         return dao.getById(id)?.toDomain()
     }
 
-    override suspend fun getBySession(sessionId: Int): Flow<List<CashMovement?>> {
-        return dao.getByCashSession(sessionId).map { list -> list.map { it?.toDomain() } }
-    }
+    override fun getCashMovements(filter: CashMovementFilter) =
+        dao.getByFilter(CashMovementQueryBuilder.build(filter)).map {
+            list -> list.map { it.toDomain() }
+        }
 
-    override suspend fun getByType(type: String): Flow<List<CashMovement?>> {
-        return dao.getByType(type).map { list -> list.map { it?.toDomain() } }
-    }
 
-    override suspend fun getByCreationDate(createdAt: Long): Flow<List<CashMovement?>> {
-        return dao.getByCreationDate(createdAt).map { list -> list.map { it?.toDomain() } }
-    }
-
-    override suspend fun getByUser(userId: Int): Flow<List<CashMovement?>> {
-        return dao.getByUser(userId).map { list -> list.map { it?.toDomain() } }
-    }
 }

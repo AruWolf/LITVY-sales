@@ -29,5 +29,5 @@ interface PromotionDao {
     fun getAll(): Flow<List<PromotionEntity>>
 
     @RawQuery([PromotionEntity::class])
-    fun getByFilter(query: SupportSQLiteQuery): Flow<List<PromotionEntity?>>
+    fun getByFilter(query: SupportSQLiteQuery): Flow<List<PromotionEntity>>
 }

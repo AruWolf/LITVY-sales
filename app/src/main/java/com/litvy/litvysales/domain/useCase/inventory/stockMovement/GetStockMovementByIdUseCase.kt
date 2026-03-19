@@ -1,14 +1,12 @@
 package com.litvy.litvysales.domain.useCase.inventory.stockMovement
 
 import com.litvy.litvysales.domain.interfaces.inventory.StockMovementRepository
-import com.litvy.litvysales.domain.model.inventory.StockBatch
 import com.litvy.litvysales.domain.model.inventory.StockMovement
-import kotlinx.coroutines.flow.Flow
 
-class GetStockMovementByBatchUseCase(
+class GetStockMovementByIdUseCase(
     private val repository: StockMovementRepository
 ) {
-    operator fun invoke(batchId: Int): Flow<List<StockMovement>>{
-        return repository.getStockMovementByBatch(batchId)
+    suspend operator fun invoke(stockMovementId: Int): StockMovement?{
+        return repository.getStockMovement(stockMovementId)
     }
 }

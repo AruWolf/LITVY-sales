@@ -13,8 +13,8 @@ import kotlinx.coroutines.flow.map
 class StockBatchRepositoryImpl(
     private val stockBatchDao: StockBatchDao
 ): StockBatchRepository {
-    override suspend fun loadBatch(batch: StockBatch) {
-        stockBatchDao.loadBatch(batch.toEntity())
+    override suspend fun loadBatch(batch: StockBatch): Long {
+        return stockBatchDao.loadBatch(batch.toEntity())
     }
 
     override suspend fun getBatch(batchId: Int): StockBatch? {

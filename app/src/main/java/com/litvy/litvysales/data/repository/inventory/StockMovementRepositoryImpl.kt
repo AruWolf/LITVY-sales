@@ -22,30 +22,6 @@ class StockMovementRepositoryImpl(
         return stockMovementDao.getStockMovementById(stockMovementId)?.toDomain()
     }
 
-    override fun getStockMovementByProduct(productId: Int): Flow<List<StockMovement>> {
-        return stockMovementDao.getStockMovementByProduct(productId).map {list -> list.map {it.toDomain()}}
-    }
-
-    override fun getStockMovementByBatch(batchId: Int): Flow<List<StockMovement>> {
-        return stockMovementDao.getStockMovementByBatch(batchId).map {list -> list.map { it.toDomain() }}
-    }
-
-    override fun getStockMovementByType(type: com.litvy.litvysales.domain.model.enums.StockMovementType): Flow<List<StockMovement>> {
-        return stockMovementDao.getStockMovementByType(type).map {list -> list.map { it.toDomain() }}
-    }
-
-    override fun getStockMovementByDay(createdAt: Long): Flow<List<StockMovement>> {
-        return stockMovementDao.getStockMovementByDay(createdAt).map {list -> list.map {it.toDomain()}}
-    }
-
-    override fun getStockMovementByReference(referenceId: Int): Flow<List<StockMovement>> {
-        return stockMovementDao.getStockMovementByReference(referenceId).map {list -> list.map { it.toDomain() }}
-    }
-
-    override fun getStockMovementByUser(userId: Int): Flow<List<StockMovement>> {
-        return stockMovementDao.getStockMovementByUser(userId).map { list -> list.map { it.toDomain()} }
-    }
-
     override fun getAllStockMovement(): Flow<List<StockMovement>> {
         return stockMovementDao.getAllStockMovement().map {list -> list.map {it.toDomain()}}
     }

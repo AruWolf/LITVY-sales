@@ -2,6 +2,8 @@ package com.litvy.litvysales.data.local.query.inventory
 
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
+import com.litvy.litvysales.data.local.query.appendOrderBy
+import com.litvy.litvysales.data.local.query.appendPagination
 import com.litvy.litvysales.domain.filter.inventory.StockBatchFilter
 
 object StockBatchQueryBuilder {
@@ -26,15 +28,30 @@ object StockBatchQueryBuilder {
             add("purchaseItemId = ?", it)
         }
 
-        filter.expirationDate?.let {
-            add("expirationDate = ?", it)
+        filter.expirationDateFrom?.let {
+            add("expirationDate >= ?", it)
         }
 
-        filter.createdAt?.let {
-            add("createdAt = ?", it)
+        filter.expirationDateTo?.let {
+            add("expirationDate <= ?", it)
         }
 
-        sql.append(" ORDER BY createdAt DESC")
+        filter.createdAtFrom?.let {
+            add("createdAt >= ?", it)
+        }
+
+        filter.createdAtTo?.let {
+            add("createdAt <= ?", it)
+        }
+
+        val orderColumn = when (filter.sortBy) {
+            com.litvy.litvysales.domain.filter.inventory.StockBatchSortBy.CREATED_AT -> "createdAt"
+            com.litvy.litvysales.domain.filter.inventory.StockBatchSortBy.EXPIRATION_DATE -> "expirationDate"
+            com.litvy.litvysales.domain.filter.inventory.StockBatchSortBy.PRODUCT_ID -> "productId"
+        }
+
+        sql.appendOrderBy(orderColumn, filter.sortDirection)
+        sql.appendPagination(args, filter.limit, filter.offset)
 
         return SimpleSQLiteQuery(sql.toString(), args.toTypedArray())
     }

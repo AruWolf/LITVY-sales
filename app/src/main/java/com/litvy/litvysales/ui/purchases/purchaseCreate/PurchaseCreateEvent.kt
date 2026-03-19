@@ -34,6 +34,10 @@ sealed interface PurchaseCreateEvent {
         val provider: ProviderUi
     ) : PurchaseCreateEvent
 
+    data class UpdateSalesRepName(
+        val value: String
+    ) : PurchaseCreateEvent
+
     data class SelectInvoiceType(
         val invoiceType: String
     ) : PurchaseCreateEvent

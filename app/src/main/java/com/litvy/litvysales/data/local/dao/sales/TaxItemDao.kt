@@ -1,9 +1,6 @@
 package com.litvy.litvysales.data.local.dao.sales
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 import com.litvy.litvysales.data.local.entity.sales.TaxItemEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -11,7 +8,10 @@ import kotlinx.coroutines.flow.Flow
 interface TaxItemDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(taxItem: TaxItemEntity)
+    suspend fun insert(taxItem: TaxItemEntity): Long
+
+    @Update
+    suspend fun update(taxItem: TaxItemEntity)
 
     @Query("SELECT * FROM taxItem WHERE id = :id")
     suspend fun getById(id : Int): TaxItemEntity?

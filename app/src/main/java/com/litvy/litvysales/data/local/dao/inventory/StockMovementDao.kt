@@ -18,24 +18,6 @@ interface StockMovementDao {
     @Query("SELECT * FROM stockMovement WHERE id = :stockMovementId")
     suspend fun getStockMovementById(stockMovementId: Int): StockMovementEntity?
 
-    @Query("SELECT * FROM stockMovement WHERE productId = :productId")
-    fun getStockMovementByProduct(productId: Int): Flow<List<StockMovementEntity>>
-
-    @Query("SELECT * FROM stockMovement WHERE batchId = :batchId")
-    fun getStockMovementByBatch(batchId: Int): Flow<List<StockMovementEntity>>
-
-    @Query("SELECT * FROM stockMovement WHERE type = :type")
-    fun getStockMovementByType(type: com.litvy.litvysales.domain.model.enums.StockMovementType): Flow<List<StockMovementEntity>>
-
-    @Query("SELECT * FROM stockMovement WHERE createdAt = :createdAt")
-    fun getStockMovementByDay(createdAt: Long): Flow<List<StockMovementEntity>>
-
-    @Query("SELECT * FROM stockMovement WHERE referenceId = :referenceId")
-    fun getStockMovementByReference(referenceId: Int): Flow<List<StockMovementEntity>>
-
-    @Query("SELECT * FROM stockMovement WHERE createdBy = :userId")
-    fun getStockMovementByUser(userId: Int): Flow<List<StockMovementEntity>>
-
     @Query("SELECT * FROM stockMovement")
     fun getAllStockMovement(): Flow<List<StockMovementEntity>>
 

@@ -1,11 +1,13 @@
 package com.litvy.litvysales.data.local.dao.purchases
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
+import androidx.room.Transaction
 import androidx.room.Update
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.litvy.litvysales.data.local.entity.purchases.PurchaseEntity
 import com.litvy.litvysales.data.local.entity.purchases.PurchaseItemEntity
 import kotlinx.coroutines.flow.Flow
@@ -14,12 +16,13 @@ import kotlinx.coroutines.flow.Flow
 interface PurchaseDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(purchase: PurchaseEntity, ): Long
+    suspend fun insert(purchase: PurchaseEntity): Long
 
+    @Transaction
     suspend fun insertPurchaseWithItems(
         purchase: PurchaseEntity,
         items: List<PurchaseItemEntity>
-    ){
+    ): Long {
         val purchaseId = insert(purchase)
 
         val itemsWithPurchaseId = items.map {
@@ -27,6 +30,7 @@ interface PurchaseDao {
         }
 
         insertItems(itemsWithPurchaseId)
+        return purchaseId
     }
 
     @Insert
@@ -35,21 +39,12 @@ interface PurchaseDao {
     @Update
     suspend fun update(purchase: PurchaseEntity)
 
-    @Delete
+    @Query("DELETE FROM purchase WHERE id = :id")
     suspend fun delete(id: Int)
 
     @Query("SELECT * FROM purchase WHERE id = :id")
     suspend fun getById(id: Int): PurchaseEntity?
 
-    @Query("SELECT * FROM purchase WHERE providerId = :providerId")
-    fun getByProvider(providerId: Int): Flow<List<PurchaseEntity>>
-
-    @Query("SELECT * FROM purchase WHERE invoiceTypeId = :invoiceTypeId ORDER BY createdAt DESC")
-    fun getByInvoiceType(invoiceTypeId: Int): Flow<List<PurchaseEntity?>>
-
-    @Query("SELECT * FROM purchase WHERE paymentMethodId = :paymentMethodId ORDER BY createdAt DESC")
-    fun getByPaymentMethod(paymentMethodId: Int): Flow<List<PurchaseEntity?>>
-
-    @Query("SELECT * FROM purchase WHERE createdAt = :createdAt ORDER BY id ASC")
-    fun getByCreatedDay(createdAt: Long): Flow<List<PurchaseEntity?>>
+    @RawQuery(observedEntities = [PurchaseEntity::class])
+    fun getByFilter(query: SupportSQLiteQuery): Flow<List<PurchaseEntity>>
 }

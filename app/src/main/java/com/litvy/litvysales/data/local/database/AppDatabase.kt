@@ -14,10 +14,16 @@ import com.litvy.litvysales.data.local.dao.catalog.SubCategoryDao
 import com.litvy.litvysales.data.local.dao.inventory.InventoryDao
 import com.litvy.litvysales.data.local.dao.inventory.StockBatchDao
 import com.litvy.litvysales.data.local.dao.inventory.StockMovementDao
+import com.litvy.litvysales.data.local.dao.purchases.InvoiceTypeDao
 import com.litvy.litvysales.data.local.dao.purchases.ProviderDao
 import com.litvy.litvysales.data.local.dao.purchases.ProviderVisitDayDao
+import com.litvy.litvysales.data.local.dao.purchases.PurchaseDao
+import com.litvy.litvysales.data.local.dao.purchases.PurchaseItemDao
+import com.litvy.litvysales.data.local.dao.purchases.PurchaseOrderDao
+import com.litvy.litvysales.data.local.dao.purchases.PurchaseOrderItemDao
 import com.litvy.litvysales.data.local.dao.user.RoleDao
 import com.litvy.litvysales.data.local.dao.user.UserDao
+import com.litvy.litvysales.data.local.dao.util.PaymentMethoDao
 import com.litvy.litvysales.data.local.entity.catalog.BrandEntity
 import com.litvy.litvysales.data.local.entity.catalog.CategoryEntity
 import com.litvy.litvysales.data.local.entity.catalog.ProductEntity
@@ -84,7 +90,7 @@ import com.litvy.litvysales.data.local.entity.util.PaymentMethodEntity
         SalePromotionEntity::class,
         InvoiceTypeEntity::class
     ],
-    version = 2
+    version = 4
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -111,6 +117,84 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "ALTER TABLE `purchase` ADD COLUMN `salesRepName` TEXT"
+                )
+            }
+        }
+
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `user_new` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `lastname` TEXT NOT NULL,
+                        `telephoneNumber` TEXT,
+                        `dni` TEXT,
+                        `birthDate` INTEGER,
+                        `address` TEXT,
+                        `email` TEXT,
+                        `passwordHash` TEXT NOT NULL,
+                        `roleId` INTEGER NOT NULL,
+                        `active` INTEGER NOT NULL DEFAULT 0,
+                        `createdAt` INTEGER NOT NULL,
+                        `updatedAt` INTEGER NOT NULL,
+                        FOREIGN KEY(`roleId`) REFERENCES `role`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL(
+                    """
+                    INSERT INTO `user_new` (
+                        `id`,
+                        `name`,
+                        `lastname`,
+                        `telephoneNumber`,
+                        `dni`,
+                        `birthDate`,
+                        `address`,
+                        `email`,
+                        `passwordHash`,
+                        `roleId`,
+                        `active`,
+                        `createdAt`,
+                        `updatedAt`
+                    )
+                    SELECT
+                        `id`,
+                        `name`,
+                        `lastname`,
+                        `telephoneNumber`,
+                        `dni`,
+                        `birthDate`,
+                        `address`,
+                        `email`,
+                        `passwordHash`,
+                        `roleId`,
+                        COALESCE(`active`, 0),
+                        `createdAt`,
+                        `updatedAt`
+                    FROM `user`
+                    """.trimIndent()
+                )
+                database.execSQL("DROP TABLE `user`")
+                database.execSQL("ALTER TABLE `user_new` RENAME TO `user`")
+                database.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS `index_user_email` ON `user` (`email`)"
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_user_roleId` ON `user` (`roleId`)"
+                )
+                database.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS `index_user_telephoneNumber` ON `user` (`telephoneNumber`)"
+                )
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -118,7 +202,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "litvy_sales_db"
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .build()
                 INSTANCE = instance
                 instance
@@ -137,4 +221,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun providerDao(): ProviderDao
     abstract fun providerVisitDayDao(): ProviderVisitDayDao
+    abstract fun invoiceTypeDao(): InvoiceTypeDao
+    abstract fun purchaseDao(): PurchaseDao
+    abstract fun purchaseItemDao(): PurchaseItemDao
+    abstract fun purchaseOrderDao(): PurchaseOrderDao
+    abstract fun purchaseOrderItemDao(): PurchaseOrderItemDao
+    abstract fun paymentMethodDao(): PaymentMethoDao
 }

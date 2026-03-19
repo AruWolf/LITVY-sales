@@ -1,8 +1,10 @@
-package com.litvy.litvysales.data.local.query
+package com.litvy.litvysales.data.local.query.sales
 
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
-import com.litvy.litvysales.domain.filter.CashSessionFilter
+import com.litvy.litvysales.data.local.query.appendOrderBy
+import com.litvy.litvysales.data.local.query.appendPagination
+import com.litvy.litvysales.domain.filter.sales.CashSessionFilter
 
 object CashSessionQueryBuilder {
 
@@ -11,7 +13,7 @@ object CashSessionQueryBuilder {
         val sql = StringBuilder()
         val args = mutableListOf<Any>()
 
-        sql.append("SELECT * FROM cashSession WHERE 1=1")
+        sql.append("SELECT * FROM cashSession WHERE 1 = 1")
 
         fun add(condition: String, vararg values: Any) {
             sql.append(" AND $condition")
@@ -50,7 +52,14 @@ object CashSessionQueryBuilder {
             }
         }
 
-        sql.append(" ORDER BY startedAt DESC")
+        val orderColumn = when (filter.sortBy) {
+            com.litvy.litvysales.domain.filter.sales.CashSessionSortBy.STARTED_AT -> "startedAt"
+            com.litvy.litvysales.domain.filter.sales.CashSessionSortBy.CLOSED_AT -> "closedAt"
+            com.litvy.litvysales.domain.filter.sales.CashSessionSortBy.STATUS -> "status"
+        }
+
+        sql.appendOrderBy(orderColumn, filter.sortDirection)
+        sql.appendPagination(args, filter.limit, filter.offset)
 
         return SimpleSQLiteQuery(sql.toString(), args.toTypedArray())
     }

@@ -1,5 +1,6 @@
 package com.litvy.litvysales.data.mapper.purchase
 
+import com.litvy.litvysales.data.local.dao.purchases.visitDaysWithProviders
 import com.litvy.litvysales.data.local.entity.purchases.*
 import com.litvy.litvysales.domain.model.enums.PurchaseOrderStatus
 import com.litvy.litvysales.data.local.relation.ProviderWithVisitDays as dataProviderWithVisitDays
@@ -18,7 +19,7 @@ fun ProviderEntity.toDomain() = Provider(
 )
 
 fun Provider.toEntity() = ProviderEntity(
-    id,
+    id = id ?: 0,
     name,
     cuit,
     telephoneNumber,
@@ -41,6 +42,13 @@ fun ProviderVisitDay.toEntity() = ProviderVisitDayEntity(
     dayOfWeek
 )
 
+fun visitDaysWithProviders.toDomain(): ProviderByVisitDay {
+    return ProviderByVisitDay(
+        dayOfWeek = dayOfWeek,
+        provider = provider.toDomain()
+    )
+}
+
 fun InvoiceTypeEntity.toDomain() = InvoiceType(
     id,
     code,
@@ -56,6 +64,7 @@ fun InvoiceType.toEntity() = InvoiceTypeEntity(
 fun PurchaseEntity.toDomain() = Purchase(
     id,
     providerId,
+    salesRepName,
     invoiceTypeId,
     paymentMethodId,
     subtotalInCents,
@@ -69,6 +78,7 @@ fun PurchaseEntity.toDomain() = Purchase(
 fun Purchase.toEntity() = PurchaseEntity(
     id,
     providerId,
+    salesRepName,
     invoiceTypeId,
     paymentMethodId,
     subtotalInCents,
@@ -98,7 +108,7 @@ fun PurchaseItem.toEntity() = PurchaseItemEntity(
 fun PurchaseOrderEntity.toDomain() = PurchaseOrder(
     id,
     providerId,
-    status,
+    status.toDomain(),
     expectedDeliveryDate,
     createdAt,
     createdBy
@@ -107,7 +117,7 @@ fun PurchaseOrderEntity.toDomain() = PurchaseOrder(
 fun PurchaseOrder.toEntity() = PurchaseOrderEntity(
     id,
     providerId,
-    status,
+    status.toEntity(),
     expectedDeliveryDate,
     createdAt,
     createdBy

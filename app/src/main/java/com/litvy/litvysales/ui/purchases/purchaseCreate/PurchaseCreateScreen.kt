@@ -16,6 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import com.litvy.litvysales.ui.components.dialog.AddProductDialog
 import com.litvy.litvysales.ui.purchases.purchaseCreate.components.PurchaseActions
 import com.litvy.litvysales.ui.purchases.purchaseCreate.components.PurchaseHeader
@@ -27,15 +29,16 @@ import com.litvy.litvysales.ui.purchases.purchaseCreate.components.PurchaseTotal
 @Composable
 fun PurchaseCreateScreen(
     state: PurchaseCreateState,
-    onEvent: (PurchaseCreateEvent) -> Unit
+    onEvent: (PurchaseCreateEvent) -> Unit,
+    onBack: () -> Unit
 ) {
     val isLandscape =
         LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     if (isLandscape) {
-        LandscapeContent(state, onEvent)
+        LandscapeContent(state, onEvent, onBack)
     } else {
-        PortraitContent(state, onEvent)
+        PortraitContent(state, onEvent, onBack)
     }
 
     if (state.showAddProductDialog) {
@@ -55,13 +58,16 @@ fun PurchaseCreateScreen(
 @Composable
 private fun PortraitContent(
     state: PurchaseCreateState,
-    onEvent: (PurchaseCreateEvent) -> Unit
+    onEvent: (PurchaseCreateEvent) -> Unit,
+    onBack: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        Text("Registrar compra", style = MaterialTheme.typography.headlineSmall)
+        Spacer(Modifier.height(8.dp))
         PurchaseHeader(state, onEvent)
         Spacer(Modifier.height(16.dp))
         PurchaseOrderSection(state, onEvent)
@@ -82,14 +88,15 @@ private fun PortraitContent(
         Spacer(Modifier.height(16.dp))
         PurchaseTotals(state)
         Spacer(Modifier.height(16.dp))
-        PurchaseActions(canConfirm = state.canConfirm, onEvent = onEvent)
+        PurchaseActions(canConfirm = state.canConfirm, onEvent = onEvent, onBack = onBack)
     }
 }
 
 @Composable
 private fun LandscapeContent(
     state: PurchaseCreateState,
-    onEvent: (PurchaseCreateEvent) -> Unit
+    onEvent: (PurchaseCreateEvent) -> Unit,
+    onBack: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -102,10 +109,11 @@ private fun LandscapeContent(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            Text("Registrar compra", style = MaterialTheme.typography.headlineSmall)
             PurchaseHeader(state, onEvent)
             PurchaseOrderSection(state, onEvent)
             PurchaseTotals(state)
-            PurchaseActions(canConfirm = state.canConfirm, onEvent = onEvent)
+            PurchaseActions(canConfirm = state.canConfirm, onEvent = onEvent, onBack = onBack)
         }
 
         Spacer(Modifier.width(16.dp))

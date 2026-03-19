@@ -1,6 +1,32 @@
 package com.litvy.litvysales.ui.purchases.purchaseCreate
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.litvy.litvysales.domain.model.catalog.Brand
+import com.litvy.litvysales.domain.model.catalog.Category
+import com.litvy.litvysales.domain.model.catalog.Product
+import com.litvy.litvysales.domain.model.catalog.SubCategory
+import com.litvy.litvysales.domain.model.enums.PurchaseOrderStatus
+import com.litvy.litvysales.domain.model.inventory.StockBatch
+import com.litvy.litvysales.domain.model.purchases.InvoiceType
+import com.litvy.litvysales.domain.model.purchases.Purchase
+import com.litvy.litvysales.domain.model.purchases.PurchaseItem
+import com.litvy.litvysales.domain.model.purchases.PurchaseOrder
+import com.litvy.litvysales.domain.model.purchases.PurchaseOrderItem
+import com.litvy.litvysales.domain.model.util.PaymentMethod
+import com.litvy.litvysales.domain.useCase.catalog.brand.GetBrandBySubCategoryUseCase
+import com.litvy.litvysales.domain.useCase.catalog.category.GetCategoriesUseCase
+import com.litvy.litvysales.domain.useCase.catalog.product.GetActiveProductsUseCase
+import com.litvy.litvysales.domain.useCase.catalog.subCategory.GetSubCategoriesByCategoryUseCase
+import com.litvy.litvysales.domain.useCase.purchases.GetInvoiceTypesUseCase
+import com.litvy.litvysales.domain.useCase.purchases.RegisterPurchaseUseCase
+import com.litvy.litvysales.domain.useCase.purchases.provider.GetProvidersWithVisitDaysUseCase
+import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.GetPurchaseOrderItemsUseCase
+import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.GetPurchaseOrdersUseCase
+import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.UpdatePurchaseOrderUseCase
+import com.litvy.litvysales.domain.useCase.sales.GetPaymentMethodsUseCase
+import com.litvy.litvysales.domain.validation.ValidationResult
 import com.litvy.litvysales.ui.components.dialog.AddProductDialogEvent
 import com.litvy.litvysales.ui.components.dialog.AddProductDialogState
 import com.litvy.litvysales.ui.util.model.CatalogOptionUi
@@ -9,216 +35,242 @@ import com.litvy.litvysales.ui.util.model.ProviderUi
 import com.litvy.litvysales.ui.util.model.PurchaseItemUi
 import com.litvy.litvysales.ui.util.model.PurchaseOrderItemUi
 import com.litvy.litvysales.ui.util.model.PurchaseOrderUi
-import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.UUID
 
-class PurchaseCreateViewModel : ViewModel() {
+class PurchaseCreateViewModel(
+    private val getProvidersWithVisitDaysUseCase: GetProvidersWithVisitDaysUseCase,
+    private val getInvoiceTypesUseCase: GetInvoiceTypesUseCase,
+    private val getPaymentMethodsUseCase: GetPaymentMethodsUseCase,
+    private val getCategoriesUseCase: GetCategoriesUseCase,
+    private val getSubCategoriesByCategoryUseCase: GetSubCategoriesByCategoryUseCase,
+    private val getBrandBySubCategoryUseCase: GetBrandBySubCategoryUseCase,
+    private val getActiveProductsUseCase: GetActiveProductsUseCase,
+    private val getPurchaseOrdersUseCase: GetPurchaseOrdersUseCase,
+    private val getPurchaseOrderItemsUseCase: GetPurchaseOrderItemsUseCase,
+    private val registerPurchaseUseCase: RegisterPurchaseUseCase,
+    private val updatePurchaseOrderUseCase: UpdatePurchaseOrderUseCase
+) : ViewModel() {
 
-    private val mockProviders = mockProviders()
-    private val mockInvoiceTypes = mockInvoiceTypes()
-    private val mockPaymentMethods = mockPaymentMethods()
-    private val mockCatalog = mockCatalog()
-    private val mockPurchaseOrders = mockPurchaseOrders()
-
-    private val _state = MutableStateFlow(
-        PurchaseCreateState(
-            providers = emptyList(),
-            invoiceTypeOptions = emptyList(),
-            paymentMethodOptions = emptyList(),
-            purchaseOrders = emptyList(),
-            addProductState = AddProductDialogState()
-        )
-    )
+    private val _state = MutableStateFlow(PurchaseCreateState())
     val state: StateFlow<PurchaseCreateState> = _state.asStateFlow()
 
+    private val invoiceTypesByLabel = mutableMapOf<String, InvoiceType>()
+    private val paymentMethodsByLabel = mutableMapOf<String, PaymentMethod>()
+    private val providersById = linkedMapOf<Int, ProviderUi>()
+    private val domainOrdersById = mutableMapOf<Int, PurchaseOrder>()
+    private val domainOrderItemsById = mutableMapOf<Int, List<PurchaseOrderItem>>()
+
+    private var categories: List<Category> = emptyList()
+    private var subCategories: List<SubCategory> = emptyList()
+    private var brands: List<Brand> = emptyList()
+    private var products: List<ProductUi> = emptyList()
+
+    private val categoryById = mutableMapOf<Int, Category>()
+    private val subCategoryById = mutableMapOf<Int, SubCategory>()
+    private val brandById = mutableMapOf<Int, Brand>()
+
     init {
-        loadInitialData()
+        loadStaticOptions()
+        observeProviders()
+        observeCatalog()
+        observePurchaseOrders()
     }
 
     fun onEvent(event: PurchaseCreateEvent) {
         when (event) {
-            PurchaseCreateEvent.Cancel -> clearFeedback("Compra cancelada.")
+            PurchaseCreateEvent.Cancel -> clearFeedback()
             PurchaseCreateEvent.Confirm -> confirmPurchase()
             PurchaseCreateEvent.DismissFeedback -> clearFeedback()
             PurchaseCreateEvent.OpenAddProductDialog -> openAddProductDialog()
             PurchaseCreateEvent.CloseAddProductDialog -> closeAddProductDialog()
-            PurchaseCreateEvent.ApplyPurchaseOrderByMerge -> applyPendingPurchaseOrder(merge = true)
-            PurchaseCreateEvent.ApplyPurchaseOrderByOverwrite -> applyPendingPurchaseOrder(merge = false)
-            PurchaseCreateEvent.DismissPurchaseOrderConflict -> dismissPurchaseOrderConflict()
             is PurchaseCreateEvent.RemoveItem -> removeItem(event.itemId)
             is PurchaseCreateEvent.UpdateQuantity -> updateItemQuantity(event.itemId, event.quantity)
             is PurchaseCreateEvent.UpdateUnitPrice -> updateItemUnitPrice(event.itemId, event.price)
             is PurchaseCreateEvent.SelectProvider -> selectProvider(event.provider)
+            is PurchaseCreateEvent.UpdateSalesRepName -> {
+                _state.update {
+                    it.copy(
+                        salesRepName = event.value,
+                        salesRepError = null,
+                        feedbackMessage = null
+                    )
+                }
+            }
             is PurchaseCreateEvent.SelectInvoiceType -> {
                 _state.update {
-                    it.copy(invoiceType = event.invoiceType, invoiceTypeError = null)
+                    it.copy(
+                        invoiceType = event.invoiceType,
+                        invoiceTypeError = null,
+                        feedbackMessage = null
+                    )
                 }
             }
-
             is PurchaseCreateEvent.SelectPaymentMethod -> {
                 _state.update {
-                    it.copy(paymentMethod = event.paymentMethod, paymentMethodError = null)
+                    it.copy(
+                        paymentMethod = event.paymentMethod,
+                        paymentMethodError = null,
+                        feedbackMessage = null
+                    )
                 }
             }
-
             is PurchaseCreateEvent.SelectPurchaseOrder -> handlePurchaseOrderSelection(event.purchaseOrder)
+            PurchaseCreateEvent.ApplyPurchaseOrderByMerge -> applyPendingPurchaseOrder(merge = true)
+            PurchaseCreateEvent.ApplyPurchaseOrderByOverwrite -> applyPendingPurchaseOrder(merge = false)
+            PurchaseCreateEvent.DismissPurchaseOrderConflict -> {
+                _state.update {
+                    it.copy(
+                        pendingPurchaseOrder = null,
+                        showOrderConflictDialog = false
+                    )
+                }
+            }
             is PurchaseCreateEvent.AddProductDialog -> handleAddProductDialogEvent(event.event)
         }
     }
 
-    private fun loadInitialData() {
-        val providers = loadProviders()
-        val invoiceTypes = loadInvoiceTypes()
-        val paymentMethods = loadPaymentMethods()
-        val purchaseOrders = loadPurchaseOrders()
+    private fun loadStaticOptions() {
+        viewModelScope.launch {
+            val invoiceTypes = getInvoiceTypesUseCase()
+            val paymentMethods = getPaymentMethodsUseCase()
 
-        _state.update {
-            it.copy(
-                providers = providers,
-                invoiceTypeOptions = invoiceTypes,
-                paymentMethodOptions = paymentMethods,
-                purchaseOrders = purchaseOrders,
-                addProductState = createAddProductDialogState()
-            )
-        }
-    }
+            invoiceTypesByLabel.clear()
+            invoiceTypes.forEach { invoiceType ->
+                invoiceTypesByLabel[invoiceType.toLabel()] = invoiceType
+            }
 
-    private fun loadProviders(): List<ProviderUi> {
-        // TODO connect UI with ProviderRepository/GetProvidersUseCase and map domain Provider -> ProviderUi
-        return mockProviders
-    }
+            paymentMethodsByLabel.clear()
+            paymentMethods.forEach { paymentMethod ->
+                paymentMethodsByLabel[paymentMethod.name] = paymentMethod
+            }
 
-    private fun loadInvoiceTypes(): List<String> {
-        // TODO connect UI with InvoiceType use case/repository when the domain contract is available
-        return mockInvoiceTypes
-    }
-
-    private fun loadPaymentMethods(): List<String> {
-        // TODO connect UI with PaymentMethodRepository/GetPaymentMethodsUseCase and map domain PaymentMethod -> UI option
-        return mockPaymentMethods
-    }
-
-    private fun loadPurchaseOrders(): List<PurchaseOrderUi> {
-        // TODO connect UI with purchase order use case/repository and map PurchaseOrder aggregate -> PurchaseOrderUi
-        return mockPurchaseOrders
-    }
-
-    private fun loadCategories(): List<CatalogOptionUi> {
-        // TODO connect UI with GetCategoriesUseCase and map Category -> CatalogOptionUi
-        return mockCatalog
-            .map { it.categoryId to it.categoryName }
-            .distinct()
-            .map { (id, name) -> CatalogOptionUi(id = id, name = name) }
-            .sortedBy { it.name }
-    }
-
-    private fun loadSubCategories(categoryId: Int?): List<CatalogOptionUi> {
-        // TODO connect UI with GetSubCategoriesByCategoryUseCase using the selected category id
-        if (categoryId == null) return emptyList()
-
-        return mockCatalog
-            .filter { it.categoryId == categoryId }
-            .map { it.subCategoryId to it.subCategoryName }
-            .distinct()
-            .map { (id, name) -> CatalogOptionUi(id = id, name = name) }
-            .sortedBy { it.name }
-    }
-
-    private fun loadBrands(subCategoryId: Int?): List<CatalogOptionUi> {
-        // TODO connect UI with GetBrandBySubCategoryUseCase using the selected subcategory id
-        if (subCategoryId == null) return emptyList()
-
-        return mockCatalog
-            .filter { it.subCategoryId == subCategoryId }
-            .map { it.brandId to it.brandName }
-            .distinct()
-            .map { (id, name) -> CatalogOptionUi(id = id, name = name) }
-            .sortedBy { it.name }
-    }
-
-    private fun loadProductsByBrand(brandId: Int?): List<ProductUi> {
-        // TODO connect UI with GetProductByBrandUseCase and map Product -> ProductUi
-        if (brandId == null) return emptyList()
-        return mockCatalog.filter { it.brandId == brandId && it.active }.sortedBy { it.name }
-    }
-
-    private fun searchProducts(query: String): List<ProductUi> {
-        // TODO connect UI with SearchProductsUseCase when replacing the in-memory catalog source
-        if (query.isBlank()) return emptyList()
-
-        return mockCatalog.filter { product ->
-            product.active && (
-                product.name.contains(query, ignoreCase = true) ||
-                    product.barcode?.contains(query, ignoreCase = true) == true
+            _state.update {
+                it.copy(
+                    invoiceTypeOptions = invoiceTypesByLabel.keys.toList(),
+                    paymentMethodOptions = paymentMethodsByLabel.keys.toList()
                 )
-        }.sortedBy { it.name }
+            }
+        }
     }
 
-    private fun createAddProductDialogState(
-        selectedCategoryId: Int? = null,
-        selectedSubCategoryId: Int? = null,
-        selectedBrandId: Int? = null,
-        searchQuery: String = "",
-        selectedProduct: ProductUi? = null,
-        quantity: String = "1",
-        unitPrice: String = selectedProduct?.purchasePrice?.toString().orEmpty(),
-        showResults: Boolean = true,
-        searchError: String? = null,
-        quantityError: String? = null,
-        unitPriceError: String? = null
-    ): AddProductDialogState {
-        val categories = loadCategories()
-        val subCategories = loadSubCategories(selectedCategoryId)
-        val brands = loadBrands(selectedSubCategoryId)
+    private fun observeProviders() {
+        viewModelScope.launch {
+            getProvidersWithVisitDaysUseCase().collect { providers ->
+                providersById.clear()
+                providers.forEach { entry ->
+                    val provider = entry.provider
+                    val id = provider.id ?: return@forEach
+                    providersById[id] = ProviderUi(
+                        id = id,
+                        name = provider.name,
+                        cuit = provider.cuit,
+                        phone = provider.telephoneNumber
+                    )
+                }
 
-        val products = when {
-            searchQuery.isNotBlank() -> searchProducts(searchQuery)
-            selectedBrandId != null -> loadProductsByBrand(selectedBrandId)
-            else -> emptyList()
+                val selectedProviderId = _state.value.provider?.id
+                _state.update { current ->
+                    current.copy(
+                        providers = providersById.values.toList().sortedBy { it.name },
+                        provider = selectedProviderId?.let { providersById[it] } ?: current.provider
+                    )
+                }
+            }
         }
+    }
 
-        return AddProductDialogState(
-            categories = categories,
-            subCategories = subCategories,
-            brands = brands,
-            selectedCategoryId = selectedCategoryId,
-            selectedSubCategoryId = selectedSubCategoryId,
-            selectedBrandId = selectedBrandId,
-            searchQuery = searchQuery,
-            products = products,
-            selectedProduct = selectedProduct,
-            quantity = quantity,
-            unitPrice = unitPrice,
-            showResults = showResults,
-            searchError = searchError,
-            quantityError = quantityError,
-            unitPriceError = unitPriceError
-        )
+    private fun observeCatalog() {
+        viewModelScope.launch {
+            categories = getCategoriesUseCase()
+            subCategories = categories.flatMap { category ->
+                val categoryId = category.id ?: return@flatMap emptyList()
+                getSubCategoriesByCategoryUseCase(categoryId)
+            }
+            brands = subCategories.flatMap { subCategory ->
+                val subCategoryId = subCategory.id ?: return@flatMap emptyList()
+                getBrandBySubCategoryUseCase(subCategoryId)
+            }
+
+            categoryById.clear()
+            categoryById.putAll(categories.mapNotNull { category -> category.id?.let { it to category } })
+            subCategoryById.clear()
+            subCategoryById.putAll(subCategories.mapNotNull { subCategory -> subCategory.id?.let { it to subCategory } })
+            brandById.clear()
+            brandById.putAll(brands.mapNotNull { brand -> brand.id?.let { it to brand } })
+
+            getActiveProductsUseCase().collect { activeProducts ->
+                products = activeProducts.mapNotNull { product -> product.toUiOrNull() }
+
+                _state.update { current ->
+                    current.copy(
+                        addProductState = current.addProductState.copy(
+                            categories = categories.toCategoryOptions(),
+                            subCategories = current.addProductState.selectedCategoryId
+                                ?.let { selected -> subCategories.filter { it.categoryId == selected }.toSubCategoryOptions() }
+                                ?: emptyList(),
+                            brands = current.addProductState.selectedSubCategoryId
+                                ?.let { selected -> brands.filter { it.subCategoryId == selected }.toBrandOptions() }
+                                ?: emptyList()
+                        )
+                    ).refreshDialogProducts()
+                }
+            }
+        }
+    }
+
+    private fun observePurchaseOrders() {
+        viewModelScope.launch {
+            getPurchaseOrdersUseCase().collect { orders ->
+                domainOrdersById.clear()
+                domainOrdersById.putAll(orders.associateBy { it.id })
+
+                val orderItemsById = mutableMapOf<Int, List<PurchaseOrderItem>>()
+                orders.forEach { order ->
+                    orderItemsById[order.id] = getPurchaseOrderItemsUseCase(order.id).first()
+                }
+                domainOrderItemsById.clear()
+                domainOrderItemsById.putAll(orderItemsById)
+
+                val uiOrders = orders.map { order ->
+                    order.toUi(orderItemsById[order.id].orEmpty())
+                }
+
+                _state.update { current ->
+                    val selectedOrderId = current.selectedPurchaseOrder?.id
+                    val pendingOrderId = current.pendingPurchaseOrder?.id
+                    current.copy(
+                        purchaseOrders = uiOrders,
+                        selectedPurchaseOrder = selectedOrderId?.let { id -> uiOrders.firstOrNull { it.id == id } },
+                        pendingPurchaseOrder = pendingOrderId?.let { id -> uiOrders.firstOrNull { it.id == id } }
+                    )
+                }
+            }
+        }
     }
 
     private fun selectProvider(provider: ProviderUi) {
-        _state.update { currentState ->
-            val selectedOrder = currentState.selectedPurchaseOrder
-            val shouldClearOrder = selectedOrder != null && selectedOrder.providerId != provider.id
-
-            currentState.copy(
+        _state.update { current ->
+            val selectedOrder = current.selectedPurchaseOrder
+            current.copy(
                 provider = provider,
                 providerError = null,
-                selectedPurchaseOrder = if (shouldClearOrder) null else selectedOrder,
-                feedbackMessage = if (shouldClearOrder) {
-                    "La orden vinculada se desvinculo porque pertenece a otro proveedor."
-                } else {
-                    currentState.feedbackMessage
-                }
+                feedbackMessage = null,
+                selectedPurchaseOrder = selectedOrder?.takeIf { it.providerId == provider.id }
             )
         }
     }
 
-    private fun handlePurchaseOrderSelection(purchaseOrder: PurchaseOrderUi?) {
-        if (purchaseOrder == null) {
+    private fun handlePurchaseOrderSelection(order: PurchaseOrderUi?) {
+        if (order == null) {
             _state.update {
                 it.copy(
                     selectedPurchaseOrder = null,
@@ -229,72 +281,58 @@ class PurchaseCreateViewModel : ViewModel() {
             return
         }
 
-        val currentItems = _state.value.items
-        if (currentItems.isNotEmpty()) {
+        if (_state.value.items.isNotEmpty()) {
             _state.update {
                 it.copy(
-                    pendingPurchaseOrder = purchaseOrder,
+                    pendingPurchaseOrder = order,
                     showOrderConflictDialog = true
                 )
             }
             return
         }
 
-        applyPurchaseOrder(purchaseOrder = purchaseOrder, merge = false)
+        applyPurchaseOrder(order, merge = false)
     }
 
     private fun applyPendingPurchaseOrder(merge: Boolean) {
-        val pendingOrder = _state.value.pendingPurchaseOrder ?: return
-        applyPurchaseOrder(purchaseOrder = pendingOrder, merge = merge)
+        val pending = _state.value.pendingPurchaseOrder ?: return
+        applyPurchaseOrder(pending, merge)
     }
 
-    private fun dismissPurchaseOrderConflict() {
-        _state.update {
-            it.copy(
-                pendingPurchaseOrder = null,
-                showOrderConflictDialog = false
-            )
-        }
-    }
+    private fun applyPurchaseOrder(order: PurchaseOrderUi, merge: Boolean) {
+        val provider = providersById[order.providerId] ?: ProviderUi(
+            id = order.providerId,
+            name = order.providerName
+        )
 
-    private fun applyPurchaseOrder(
-        purchaseOrder: PurchaseOrderUi,
-        merge: Boolean
-    ) {
-        val provider = _state.value.providers.firstOrNull { it.id == purchaseOrder.providerId }
-            ?: ProviderUi(id = purchaseOrder.providerId, name = purchaseOrder.providerName)
-
-        val orderItems = purchaseOrder.items.mapNotNull { orderItem ->
-            val product = mockCatalog.firstOrNull { it.id == orderItem.productId } ?: return@mapNotNull null
+        val orderItems = order.items.map { item ->
             PurchaseItemUi(
-                uiId = UUID.randomUUID().toString(),
-                productId = product.id,
-                productName = product.name,
-                quantity = orderItem.quantity,
-                unitPrice = orderItem.suggestedUnitPriceInCents ?: product.purchasePrice,
-                total = (orderItem.quantity * (orderItem.suggestedUnitPriceInCents ?: product.purchasePrice)).toLong()
+                uiId = "order-${order.id}-${item.productId}",
+                productId = item.productId,
+                productName = item.productName,
+                quantity = item.quantity,
+                unitPrice = item.suggestedUnitPriceInCents ?: 0L,
+                total = (item.quantity * (item.suggestedUnitPriceInCents ?: 0L)).toLong()
             )
         }
 
-        _state.update { currentState ->
+        _state.update { current ->
             val items = if (merge) {
-                mergeItems(currentState.items, orderItems)
+                mergeItems(current.items, orderItems)
             } else {
                 orderItems
             }
 
-            currentState.withRecalculatedTotals(items = items, itemsError = null).copy(
+            current.copy(
                 provider = provider,
-                providerError = null,
-                selectedPurchaseOrder = purchaseOrder,
+                selectedPurchaseOrder = order,
                 pendingPurchaseOrder = null,
                 showOrderConflictDialog = false,
-                feedbackMessage = if (merge) {
-                    "Orden de compra fusionada con los items actuales."
-                } else {
-                    "Orden de compra cargada en el registro."
-                }
-            )
+                items = items,
+                providerError = null,
+                itemsError = null,
+                feedbackMessage = null
+            ).withRecalculatedTotals()
         }
     }
 
@@ -302,7 +340,11 @@ class PurchaseCreateViewModel : ViewModel() {
         _state.update {
             it.copy(
                 showAddProductDialog = true,
-                addProductState = createAddProductDialogState()
+                addProductState = AddProductDialogState(
+                    categories = categories.toCategoryOptions(),
+                    products = products,
+                    showResults = true
+                )
             )
         }
     }
@@ -311,58 +353,56 @@ class PurchaseCreateViewModel : ViewModel() {
         _state.update {
             it.copy(
                 showAddProductDialog = false,
-                addProductState = createAddProductDialogState()
+                addProductState = AddProductDialogState(
+                    categories = categories.toCategoryOptions()
+                )
             )
         }
     }
 
     private fun removeItem(itemId: String) {
-        _state.update { currentState ->
-            val updatedItems = currentState.items.filterNot { it.uiId == itemId }
-            currentState.withRecalculatedTotals(
-                items = updatedItems,
-                itemsError = if (updatedItems.isEmpty()) "Agrega al menos un producto." else null
-            )
+        _state.update {
+            it.copy(
+                items = it.items.filterNot { item -> item.uiId == itemId },
+                itemsError = null,
+                feedbackMessage = null
+            ).withRecalculatedTotals()
         }
     }
 
-    private fun updateItemQuantity(itemId: String, rawQuantity: String) {
-        val quantity = rawQuantity.toDoubleOrNull()
-        if (quantity == null || quantity <= 0.0) {
-            _state.update { it.copy(itemsError = "La cantidad debe ser mayor a cero.") }
-            return
-        }
-
-        _state.update { currentState ->
-            val updatedItems = currentState.items.map { item ->
-                if (item.uiId == itemId) {
-                    item.copy(quantity = quantity, total = (quantity * item.unitPrice).toLong())
-                } else {
+    private fun updateItemQuantity(itemId: String, quantity: String) {
+        val parsedQuantity = quantity.toDoubleOrNull()
+        _state.update { current ->
+            val updatedItems = current.items.map { item ->
+                if (item.uiId != itemId || parsedQuantity == null || parsedQuantity <= 0.0) {
                     item
+                } else {
+                    item.copy(
+                        quantity = parsedQuantity,
+                        total = (parsedQuantity * item.unitPrice).toLong()
+                    )
                 }
             }
 
-            currentState.withRecalculatedTotals(items = updatedItems, itemsError = null)
+            current.copy(items = updatedItems).withRecalculatedTotals()
         }
     }
 
-    private fun updateItemUnitPrice(itemId: String, rawPrice: String) {
-        val unitPrice = rawPrice.toLongOrNull()
-        if (unitPrice == null || unitPrice <= 0L) {
-            _state.update { it.copy(itemsError = "El precio unitario debe ser mayor a cero.") }
-            return
-        }
-
-        _state.update { currentState ->
-            val updatedItems = currentState.items.map { item ->
-                if (item.uiId == itemId) {
-                    item.copy(unitPrice = unitPrice, total = (item.quantity * unitPrice).toLong())
-                } else {
+    private fun updateItemUnitPrice(itemId: String, price: String) {
+        val parsedPrice = price.toLongOrNull()
+        _state.update { current ->
+            val updatedItems = current.items.map { item ->
+                if (item.uiId != itemId || parsedPrice == null || parsedPrice < 0L) {
                     item
+                } else {
+                    item.copy(
+                        unitPrice = parsedPrice,
+                        total = (item.quantity * parsedPrice).toLong()
+                    )
                 }
             }
 
-            currentState.withRecalculatedTotals(items = updatedItems, itemsError = null)
+            current.copy(items = updatedItems).withRecalculatedTotals()
         }
     }
 
@@ -371,101 +411,101 @@ class PurchaseCreateViewModel : ViewModel() {
             AddProductDialogEvent.Cancel -> closeAddProductDialog()
             AddProductDialogEvent.Confirm -> confirmAddProduct()
             AddProductDialogEvent.ScanBarcode -> {
-                // TODO wire barcode scan trigger from UI when the scanner flow is available
-            }
-
-            is AddProductDialogEvent.SelectCategory -> {
-                _state.update { currentState ->
-                    currentState.copy(
-                        addProductState = createAddProductDialogState(
-                            selectedCategoryId = event.categoryId,
-                            searchQuery = "",
-                            showResults = true
+                _state.update {
+                    it.copy(
+                        addProductState = it.addProductState.copy(
+                            searchError = "El escaneo de codigo de barras queda pendiente para una siguiente iteracion."
                         )
                     )
                 }
             }
-
-            is AddProductDialogEvent.SelectSubCategory -> {
-                val categoryId = _state.value.addProductState.selectedCategoryId
-                _state.update { currentState ->
-                    currentState.copy(
-                        addProductState = createAddProductDialogState(
-                            selectedCategoryId = categoryId,
-                            selectedSubCategoryId = event.subCategoryId,
-                            searchQuery = "",
-                            showResults = true
-                        )
-                    )
-                }
-            }
-
-            is AddProductDialogEvent.SelectBrand -> {
-                val dialog = _state.value.addProductState
-                _state.update { currentState ->
-                    currentState.copy(
-                        addProductState = createAddProductDialogState(
-                            selectedCategoryId = dialog.selectedCategoryId,
-                            selectedSubCategoryId = dialog.selectedSubCategoryId,
-                            selectedBrandId = event.brandId,
-                            searchQuery = "",
-                            showResults = true
-                        )
-                    )
-                }
-            }
-
             is AddProductDialogEvent.SearchChanged -> {
-                val dialog = _state.value.addProductState
-                _state.update { currentState ->
-                    currentState.copy(
-                        addProductState = createAddProductDialogState(
-                            selectedCategoryId = dialog.selectedCategoryId,
-                            selectedSubCategoryId = dialog.selectedSubCategoryId,
-                            selectedBrandId = dialog.selectedBrandId,
+                _state.update {
+                    it.copy(
+                        addProductState = it.addProductState.copy(
                             searchQuery = event.query,
-                            selectedProduct = if (event.query.isBlank()) dialog.selectedProduct else null,
-                            quantity = dialog.quantity,
-                            unitPrice = dialog.unitPrice,
-                            showResults = true
+                            searchError = null
                         )
-                    )
+                    ).refreshDialogProducts()
                 }
             }
+            is AddProductDialogEvent.SelectCategory -> {
+                _state.update {
+                    val filteredSubCategories = event.categoryId
+                        ?.let { selected -> subCategories.filter { it.categoryId == selected }.toSubCategoryOptions() }
+                        ?: emptyList()
 
-            is AddProductDialogEvent.SelectProduct -> {
-                val dialog = _state.value.addProductState
-                _state.update { currentState ->
-                    currentState.copy(
-                        addProductState = createAddProductDialogState(
-                            selectedCategoryId = event.product.categoryId,
-                            selectedSubCategoryId = event.product.subCategoryId,
-                            selectedBrandId = event.product.brandId,
-                            searchQuery = dialog.searchQuery,
-                            selectedProduct = event.product,
+                    it.copy(
+                        addProductState = it.addProductState.copy(
+                            selectedCategoryId = event.categoryId,
+                            selectedSubCategoryId = null,
+                            selectedBrandId = null,
+                            subCategories = filteredSubCategories,
+                            brands = emptyList(),
+                            selectedProduct = null,
                             quantity = "1",
+                            unitPrice = ""
+                        )
+                    ).refreshDialogProducts()
+                }
+            }
+            is AddProductDialogEvent.SelectSubCategory -> {
+                _state.update {
+                    val filteredBrands = event.subCategoryId
+                        ?.let { selected -> brands.filter { it.subCategoryId == selected }.toBrandOptions() }
+                        ?: emptyList()
+
+                    it.copy(
+                        addProductState = it.addProductState.copy(
+                            selectedSubCategoryId = event.subCategoryId,
+                            selectedBrandId = null,
+                            brands = filteredBrands,
+                            selectedProduct = null,
+                            quantity = "1",
+                            unitPrice = ""
+                        )
+                    ).refreshDialogProducts()
+                }
+            }
+            is AddProductDialogEvent.SelectBrand -> {
+                _state.update {
+                    it.copy(
+                        addProductState = it.addProductState.copy(
+                            selectedBrandId = event.brandId,
+                            selectedProduct = null,
+                            quantity = "1",
+                            unitPrice = ""
+                        )
+                    ).refreshDialogProducts()
+                }
+            }
+            is AddProductDialogEvent.SelectProduct -> {
+                _state.update {
+                    it.copy(
+                        addProductState = it.addProductState.copy(
+                            selectedProduct = event.product,
                             unitPrice = event.product.purchasePrice.toString(),
-                            showResults = false
+                            searchError = null,
+                            quantityError = null,
+                            unitPriceError = null
                         )
                     )
                 }
             }
-
             is AddProductDialogEvent.QuantityChanged -> {
-                _state.update { currentState ->
-                    currentState.copy(
-                        addProductState = currentState.addProductState.copy(
+                _state.update {
+                    it.copy(
+                        addProductState = it.addProductState.copy(
                             quantity = event.value,
                             quantityError = null
                         )
                     )
                 }
             }
-
             is AddProductDialogEvent.PriceChanged -> {
-                _state.update { currentState ->
-                    currentState.copy(
-                        addProductState = currentState.addProductState.copy(
+                _state.update {
+                    it.copy(
+                        addProductState = it.addProductState.copy(
                             unitPrice = event.value,
                             unitPriceError = null
                         )
@@ -481,22 +521,26 @@ class PurchaseCreateViewModel : ViewModel() {
         val quantity = dialogState.quantity.toDoubleOrNull()
         val unitPrice = dialogState.unitPrice.toLongOrNull()
 
-        val searchError = if (selectedProduct == null) "Selecciona un producto." else null
-        val quantityError = when {
-            dialogState.quantity.isBlank() -> "Ingresa una cantidad."
-            quantity == null || quantity <= 0.0 -> "La cantidad debe ser mayor a cero."
-            else -> null
+        val searchError = if (selectedProduct == null) {
+            "Selecciona un producto antes de continuar."
+        } else {
+            null
         }
-        val unitPriceError = when {
-            dialogState.unitPrice.isBlank() -> "Ingresa un precio."
-            unitPrice == null || unitPrice <= 0L -> "El precio debe ser mayor a cero."
-            else -> null
+        val quantityError = if (quantity == null || quantity <= 0.0) {
+            "Ingresa una cantidad valida."
+        } else {
+            null
+        }
+        val unitPriceError = if (unitPrice == null || unitPrice <= 0L) {
+            "Ingresa un precio valido en centavos."
+        } else {
+            null
         }
 
         if (searchError != null || quantityError != null || unitPriceError != null) {
-            _state.update { currentState ->
-                currentState.copy(
-                    addProductState = currentState.addProductState.copy(
+            _state.update {
+                it.copy(
+                    addProductState = dialogState.copy(
                         searchError = searchError,
                         quantityError = quantityError,
                         unitPriceError = unitPriceError
@@ -506,7 +550,7 @@ class PurchaseCreateViewModel : ViewModel() {
             return
         }
 
-        val item = PurchaseItemUi(
+        val newItem = PurchaseItemUi(
             uiId = UUID.randomUUID().toString(),
             productId = selectedProduct!!.id,
             productName = selectedProduct.name,
@@ -515,154 +559,269 @@ class PurchaseCreateViewModel : ViewModel() {
             total = (quantity * unitPrice).toLong()
         )
 
-        _state.update { currentState ->
-            currentState.withRecalculatedTotals(
-                items = mergeItems(currentState.items, listOf(item)),
-                itemsError = null
-            ).copy(
+        _state.update {
+            it.copy(
                 showAddProductDialog = false,
-                addProductState = createAddProductDialogState()
-            )
+                items = mergeItems(it.items, listOf(newItem)),
+                itemsError = null,
+                feedbackMessage = null,
+                addProductState = AddProductDialogState(
+                    categories = categories.toCategoryOptions()
+                )
+            ).withRecalculatedTotals()
         }
     }
 
     private fun confirmPurchase() {
-        val currentState = _state.value
-        val providerError = if (currentState.provider == null) "Selecciona un proveedor." else null
-        val invoiceTypeError = if (currentState.invoiceType.isBlank()) "Selecciona el tipo de factura." else null
-        val paymentMethodError = if (currentState.paymentMethod.isBlank()) "Selecciona el medio de pago." else null
-        val itemsError = if (currentState.items.isEmpty()) "Agrega al menos un producto." else null
+        val current = _state.value
+        val provider = current.provider
+        val invoiceType = invoiceTypesByLabel[current.invoiceType]
+        val paymentMethod = paymentMethodsByLabel[current.paymentMethod]
 
-        if (providerError != null || invoiceTypeError != null || paymentMethodError != null || itemsError != null) {
+        if (provider == null || invoiceType == null || paymentMethod == null) {
             _state.update {
                 it.copy(
-                    providerError = providerError,
-                    invoiceTypeError = invoiceTypeError,
-                    paymentMethodError = paymentMethodError,
-                    itemsError = itemsError,
-                    feedbackMessage = "Faltan completar datos obligatorios."
+                    providerError = if (provider == null) "Selecciona un proveedor." else null,
+                    invoiceTypeError = if (invoiceType == null) "Selecciona un tipo de factura." else null,
+                    paymentMethodError = if (paymentMethod == null) "Selecciona un metodo de pago." else null,
+                    salesRepError = if (it.salesRepName.isBlank()) "Ingresa el vendedor o preventista." else null,
+                    itemsError = if (it.items.isEmpty()) "Agrega al menos un producto." else null
                 )
             }
             return
         }
 
-        // TODO map PurchaseCreateState to the parameter object required by RegisterPurchaseUseCase
-        // TODO invoke domain validation/result handling and propagate field errors back into this UI state
-        // TODO if there is a linked purchase order, update its status to RECEIVED after a successful registration
-        _state.update {
-            it.copy(
-                providerError = null,
-                invoiceTypeError = null,
-                paymentMethodError = null,
-                itemsError = null,
-                feedbackMessage = "Formulario listo para conectar con el caso de uso de registro."
+        _state.update { it.copy(isSubmitting = true, feedbackMessage = null) }
+
+        viewModelScope.launch {
+            val now = System.currentTimeMillis()
+            val purchase = Purchase(
+                providerId = provider.id,
+                salesRepName = current.salesRepName.trim(),
+                invoiceTypeId = invoiceType.id,
+                paymentMethodId = paymentMethod.id,
+                subtotalInCents = current.subtotalInCents,
+                totalDiscountInCents = 0L,
+                totalTaxInCents = current.taxInCents,
+                totalInCents = current.totalInCents,
+                createdAt = now,
+                createdBy = DEFAULT_USER_ID
             )
+
+            val purchaseItems = current.items.map { item ->
+                PurchaseItem(
+                    purchaseId = 0,
+                    productId = item.productId,
+                    quantity = item.quantity,
+                    unitPriceInCents = item.unitPrice
+                )
+            }
+
+            val batches = current.items.map { item ->
+                StockBatch(
+                    productId = item.productId,
+                    quantity = item.quantity,
+                    expirationDate = null,
+                    purchaseItemId = null,
+                    createdAt = now
+                )
+            }
+
+            when (val result = registerPurchaseUseCase(purchase, purchaseItems, batches)) {
+                ValidationResult.Success -> {
+                    updateSelectedOrderAsReceived()
+                    _state.update {
+                        PurchaseCreateState(
+                            providers = it.providers,
+                            invoiceTypeOptions = it.invoiceTypeOptions,
+                            paymentMethodOptions = it.paymentMethodOptions,
+                            purchaseOrders = it.purchaseOrders,
+                            feedbackMessage = "Compra registrada correctamente."
+                        )
+                    }
+                }
+                is ValidationResult.Failure -> {
+                    val errors = result.errors.associate { issue -> issue.field to issue.message }
+                    _state.update {
+                        it.copy(
+                            isSubmitting = false,
+                            providerError = errors["providerId"] ?: errors["provider"],
+                            salesRepError = errors["salesRepName"],
+                            invoiceTypeError = errors["invoiceTypeId"] ?: errors["invoiceType"],
+                            paymentMethodError = errors["paymentMethodId"] ?: errors["paymentMethod"],
+                            itemsError = errors["items"],
+                            feedbackMessage = "Revisa los datos de la compra."
+                        )
+                    }
+                }
+            }
         }
     }
 
-    private fun clearFeedback(message: String? = null) {
-        _state.update { it.copy(feedbackMessage = message) }
+    private suspend fun updateSelectedOrderAsReceived() {
+        val selectedOrder = _state.value.selectedPurchaseOrder ?: return
+        val domainOrder = domainOrdersById[selectedOrder.id] ?: return
+        val items = domainOrderItemsById[selectedOrder.id].orEmpty()
+
+        if (items.isEmpty() || domainOrder.status == PurchaseOrderStatus.CANCELLED) {
+            return
+        }
+
+        updatePurchaseOrderUseCase(
+            purchaseOrder = domainOrder.copy(status = PurchaseOrderStatus.RECEIVED),
+            items = items
+        )
+    }
+
+    private fun clearFeedback() {
+        _state.update { it.copy(feedbackMessage = null) }
     }
 
     private fun mergeItems(
         currentItems: List<PurchaseItemUi>,
         incomingItems: List<PurchaseItemUi>
     ): List<PurchaseItemUi> {
-        var merged = currentItems
+        val merged = currentItems.associateBy { it.productId }.toMutableMap()
 
-        incomingItems.forEach { newItem ->
-            val existingItem = merged.firstOrNull {
-                it.productId == newItem.productId && it.unitPrice == newItem.unitPrice
-            }
-
-            merged = if (existingItem == null) {
-                merged + newItem
+        incomingItems.forEach { incoming ->
+            val existing = merged[incoming.productId]
+            merged[incoming.productId] = if (existing == null) {
+                incoming
             } else {
-                merged.map { item ->
-                    if (item.uiId == existingItem.uiId) {
-                        val newQuantity = item.quantity + newItem.quantity
-                        item.copy(
-                            quantity = newQuantity,
-                            total = (newQuantity * item.unitPrice).toLong()
-                        )
-                    } else {
-                        item
-                    }
-                }
+                val quantity = existing.quantity + incoming.quantity
+                val unitPrice = if (incoming.unitPrice > 0L) incoming.unitPrice else existing.unitPrice
+                existing.copy(
+                    quantity = quantity,
+                    unitPrice = unitPrice,
+                    total = (quantity * unitPrice).toLong()
+                )
             }
         }
 
-        return merged
+        return merged.values.sortedBy { it.productName }
     }
 
-    private fun PurchaseCreateState.withRecalculatedTotals(
-        items: List<PurchaseItemUi>,
-        itemsError: String? = this.itemsError
-    ): PurchaseCreateState {
-        val subtotal = items.sumOf { item -> item.total }
-        val tax = 0L
-        val total = subtotal + tax
+    private fun PurchaseCreateState.withRecalculatedTotals(): PurchaseCreateState {
+        val subtotal = items.sumOf { it.total }
+        return copy(
+            subtotalInCents = subtotal,
+            taxInCents = 0L,
+            totalInCents = subtotal
+        )
+    }
+
+    private fun PurchaseCreateState.refreshDialogProducts(): PurchaseCreateState {
+        val filteredProducts = products.filter { product ->
+            (addProductState.selectedCategoryId == null || product.categoryId == addProductState.selectedCategoryId) &&
+                (addProductState.selectedSubCategoryId == null || product.subCategoryId == addProductState.selectedSubCategoryId) &&
+                (addProductState.selectedBrandId == null || product.brandId == addProductState.selectedBrandId) &&
+                (
+                    addProductState.searchQuery.isBlank() ||
+                        product.name.contains(addProductState.searchQuery, ignoreCase = true) ||
+                        product.barcode?.contains(addProductState.searchQuery, ignoreCase = true) == true
+                    )
+        }
 
         return copy(
-            items = items,
-            subtotalInCents = subtotal,
-            taxInCents = tax,
-            totalInCents = total,
-            itemsError = itemsError
+            addProductState = addProductState.copy(
+                products = filteredProducts,
+                showResults = true
+            )
         )
     }
 
-    // Datos simulados
-    private fun mockProviders(): List<ProviderUi> = listOf(
-        ProviderUi(id = 1, name = "Distribuidora Centro", cuit = "30-12345678-9", phone = "3415550101"),
-        ProviderUi(id = 2, name = "Bebidas del Litoral", cuit = "30-87654321-0", phone = "3415550102"),
-        ProviderUi(id = 3, name = "Mayorista San Martin", cuit = "30-11223344-5", phone = "3415550103")
-    )
+    private fun Product.toUiOrNull(): ProductUi? {
+        val brand = brandById[brandId] ?: return null
+        val subCategory = subCategoryById[brand.subCategoryId] ?: return null
+        val category = categoryById[subCategory.categoryId] ?: return null
 
-    private fun mockInvoiceTypes(): List<String> = listOf("A", "B", "C", "Ticket")
-
-    private fun mockPaymentMethods(): List<String> = listOf(
-        "Efectivo",
-        "Transferencia",
-        "Cuenta corriente",
-        "Tarjeta"
-    )
-
-    private fun mockCatalog(): List<ProductUi> = listOf(
-        ProductUi(1, "Yerba 1kg", "779000000001", 425000, 1, "Almacen", 1, "Infusiones", 1, "Playadito"),
-        ProductUi(2, "Te en saquitos", "779000000002", 195000, 1, "Almacen", 1, "Infusiones", 2, "La Virginia"),
-        ProductUi(3, "Azucar 1kg", "779000000003", 138500, 1, "Almacen", 2, "Endulzantes", 3, "Ledesma"),
-        ProductUi(4, "Harina 000 1kg", "779000000004", 126000, 1, "Almacen", 3, "Harinas", 4, "Blancaflor"),
-        ProductUi(5, "Arroz largo fino 1kg", "779000000005", 119900, 1, "Almacen", 4, "Arroces", 5, "Gallo"),
-        ProductUi(6, "Gaseosa cola 2.25L", "779000000006", 310000, 2, "Bebidas", 5, "Gaseosas", 6, "Coca Cola"),
-        ProductUi(7, "Gaseosa lima limon 2.25L", "779000000007", 285000, 2, "Bebidas", 5, "Gaseosas", 7, "Sprite"),
-        ProductUi(8, "Agua mineral 1.5L", "779000000008", 145000, 2, "Bebidas", 6, "Aguas", 8, "Villa del Sur"),
-        ProductUi(9, "Aceite 900ml", "779000000009", 289900, 1, "Almacen", 7, "Aceites", 9, "Cocinero"),
-        ProductUi(10, "Pure de tomate 520g", "779000000010", 99000, 1, "Almacen", 8, "Conservas", 10, "Arcor")
-    )
-
-    private fun mockPurchaseOrders(): List<PurchaseOrderUi> = listOf(
-        PurchaseOrderUi(
-            id = 101,
-            providerId = 1,
-            providerName = "Distribuidora Centro",
-            status = "PENDING",
-            expectedDeliveryLabel = "20/03/2026",
-            items = listOf(
-                PurchaseOrderItemUi(productId = 1, productName = "Yerba 1kg", quantity = 8.0, suggestedUnitPriceInCents = 425000),
-                PurchaseOrderItemUi(productId = 3, productName = "Azucar 1kg", quantity = 12.0, suggestedUnitPriceInCents = 138500)
-            )
-        ),
-        PurchaseOrderUi(
-            id = 102,
-            providerId = 2,
-            providerName = "Bebidas del Litoral",
-            status = "SENT",
-            expectedDeliveryLabel = "19/03/2026",
-            items = listOf(
-                PurchaseOrderItemUi(productId = 6, productName = "Gaseosa cola 2.25L", quantity = 10.0, suggestedUnitPriceInCents = 310000),
-                PurchaseOrderItemUi(productId = 8, productName = "Agua mineral 1.5L", quantity = 12.0, suggestedUnitPriceInCents = 145000)
-            )
+        return ProductUi(
+            id = id ?: return null,
+            name = name,
+            barcode = null,
+            purchasePrice = purchasePriceInCents,
+            categoryId = category.id ?: return null,
+            categoryName = category.name,
+            subCategoryId = subCategory.id ?: return null,
+            subCategoryName = subCategory.name,
+            brandId = brand.id ?: return null,
+            brandName = brand.name,
+            active = active
         )
-    )
+    }
+
+    private fun List<Category>.toCategoryOptions(): List<CatalogOptionUi> =
+        mapNotNull { category -> category.id?.let { CatalogOptionUi(it, category.name) } }
+
+    private fun List<SubCategory>.toSubCategoryOptions(): List<CatalogOptionUi> =
+        mapNotNull { subCategory -> subCategory.id?.let { CatalogOptionUi(it, subCategory.name) } }
+
+    private fun List<Brand>.toBrandOptions(): List<CatalogOptionUi> =
+        mapNotNull { brand -> brand.id?.let { CatalogOptionUi(it, brand.name) } }
+
+    private fun InvoiceType.toLabel(): String {
+        return if (description.isBlank() || description.equals(code, ignoreCase = true)) {
+            code
+        } else {
+            "$code - $description"
+        }
+    }
+
+    private fun PurchaseOrder.toUi(items: List<PurchaseOrderItem>): PurchaseOrderUi {
+        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale("es", "AR"))
+        val providerName = providersById[providerId]?.name ?: "Proveedor #$providerId"
+
+        return PurchaseOrderUi(
+            id = id,
+            providerId = providerId,
+            providerName = providerName,
+            status = status.name,
+            expectedDeliveryLabel = expectedDeliveryDate?.let { formatter.format(it) },
+            items = items.map { item ->
+                PurchaseOrderItemUi(
+                    productId = item.productId,
+                    productName = products.firstOrNull { product -> product.id == item.productId }?.name
+                        ?: "Producto #${item.productId}",
+                    quantity = item.quantity,
+                    suggestedUnitPriceInCents = products.firstOrNull { product -> product.id == item.productId }?.purchasePrice
+                )
+            }
+        )
+    }
+
+    companion object {
+        private const val DEFAULT_USER_ID = 1
+    }
+}
+
+class PurchaseCreateViewModelFactory(
+    private val getProvidersWithVisitDaysUseCase: GetProvidersWithVisitDaysUseCase,
+    private val getInvoiceTypesUseCase: GetInvoiceTypesUseCase,
+    private val getPaymentMethodsUseCase: GetPaymentMethodsUseCase,
+    private val getCategoriesUseCase: GetCategoriesUseCase,
+    private val getSubCategoriesByCategoryUseCase: GetSubCategoriesByCategoryUseCase,
+    private val getBrandBySubCategoryUseCase: GetBrandBySubCategoryUseCase,
+    private val getActiveProductsUseCase: GetActiveProductsUseCase,
+    private val getPurchaseOrdersUseCase: GetPurchaseOrdersUseCase,
+    private val getPurchaseOrderItemsUseCase: GetPurchaseOrderItemsUseCase,
+    private val registerPurchaseUseCase: RegisterPurchaseUseCase,
+    private val updatePurchaseOrderUseCase: UpdatePurchaseOrderUseCase
+) : ViewModelProvider.Factory {
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return PurchaseCreateViewModel(
+            getProvidersWithVisitDaysUseCase = getProvidersWithVisitDaysUseCase,
+            getInvoiceTypesUseCase = getInvoiceTypesUseCase,
+            getPaymentMethodsUseCase = getPaymentMethodsUseCase,
+            getCategoriesUseCase = getCategoriesUseCase,
+            getSubCategoriesByCategoryUseCase = getSubCategoriesByCategoryUseCase,
+            getBrandBySubCategoryUseCase = getBrandBySubCategoryUseCase,
+            getActiveProductsUseCase = getActiveProductsUseCase,
+            getPurchaseOrdersUseCase = getPurchaseOrdersUseCase,
+            getPurchaseOrderItemsUseCase = getPurchaseOrderItemsUseCase,
+            registerPurchaseUseCase = registerPurchaseUseCase,
+            updatePurchaseOrderUseCase = updatePurchaseOrderUseCase
+        ) as T
+    }
 }

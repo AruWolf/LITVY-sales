@@ -34,6 +34,7 @@ data class PurchaseEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val providerId: Int,
+    val salesRepName: String?,
     val invoiceTypeId: Int,
     val paymentMethodId: Int,
     val subtotalInCents: Long,

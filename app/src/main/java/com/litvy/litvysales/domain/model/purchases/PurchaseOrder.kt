@@ -1,6 +1,6 @@
 package com.litvy.litvysales.domain.model.purchases
 
-import com.litvy.litvysales.data.local.entity.enums.PurchaseOrderStatus
+import com.litvy.litvysales.domain.model.enums.PurchaseOrderStatus
 
 data class PurchaseOrder(
     val id: Int = 0,

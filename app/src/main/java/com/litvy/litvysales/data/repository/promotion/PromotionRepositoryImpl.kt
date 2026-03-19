@@ -37,6 +37,6 @@ class PromotionRepositoryImpl(
 
     override fun getPromotions(filter: PromotionFilter) =
         dao.getByFilter(PromotionQueryBuilder.build(filter)).map {
-            list -> list.map { it?.toDomain() }
+            list -> list.map { it.toDomain() }
         }
 }

@@ -1,5 +1,6 @@
 package com.litvy.litvysales.domain.interfaces.sales
 
+import com.litvy.litvysales.domain.filter.sales.SaleFilter
 import com.litvy.litvysales.domain.model.sales.Sale
 import kotlinx.coroutines.flow.Flow
 
@@ -11,13 +12,15 @@ interface SaleRepository {
 
     suspend fun getById(id: Int): Sale?
 
-    fun getBySession(sessionId: Int): Flow<List<Sale>>
-
     suspend fun getByPeriod(startDate: Long, endDate: Long): List<Sale>
 
     suspend fun cancelSale(
         saleId: Int,
         reason: String
     )
+
+    fun getAll(): Flow<List<Sale?>>
+
+    fun getSales(filter: SaleFilter): Flow<List<Sale>>
 
 }

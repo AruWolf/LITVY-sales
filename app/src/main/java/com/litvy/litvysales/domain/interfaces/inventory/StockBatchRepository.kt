@@ -5,7 +5,7 @@ import com.litvy.litvysales.domain.model.inventory.StockBatch
 import kotlinx.coroutines.flow.Flow
 
 interface StockBatchRepository {
-    suspend fun loadBatch(batch: StockBatch)
+    suspend fun loadBatch(batch: StockBatch): Long
     suspend fun getBatch(batchId: Int): StockBatch?
     fun existsById(batchId: Int?): Boolean
     fun belongsToProduct(batchId: Int, productId:Int): Boolean

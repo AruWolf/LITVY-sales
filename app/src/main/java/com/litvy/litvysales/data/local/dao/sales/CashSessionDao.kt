@@ -20,18 +20,8 @@ interface CashSessionDao {
     @Query("SELECT * FROM cashSession ORDER BY closedAt DESC")
     fun getAll(): Flow<List<CashSessionEntity?>>
 
-    @Query("SELECT * FROM cashsession WHERE status = :status")
-    fun getByStatus(status: CashSessionStatus): Flow<List<CashSessionEntity?>>
-
-    @Query("SELECT * FROM cashSession WHERE openedBy = :userId ORDER BY startedAt DESC")
-    fun getByOpeningUser(userId: Int): Flow<List<CashSessionEntity?>>
-
-    @Query("SELECT * FROM cashSession WHERE closedBy = :userId ORDER BY closedAt DESC")
-    fun getByClosingUser(userId: Int): Flow<List<CashSessionEntity?>>
-
     @RawQuery(observedEntities = [CashSessionEntity::class])
     fun getByFilter(query: SupportSQLiteQuery): Flow<List<CashSessionEntity>>
-
 
 }
 

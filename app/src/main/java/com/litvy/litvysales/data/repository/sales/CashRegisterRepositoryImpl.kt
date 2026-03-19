@@ -1,8 +1,10 @@
 package com.litvy.litvysales.data.repository.sales
 
 import com.litvy.litvysales.data.local.dao.sales.CashRegisterDao
+import com.litvy.litvysales.data.local.query.sales.CashRegisterQueryBuilder
 import com.litvy.litvysales.data.mapper.sales.toDomain
 import com.litvy.litvysales.data.mapper.sales.toEntity
+import com.litvy.litvysales.domain.filter.sales.CashRegisterFilter
 import com.litvy.litvysales.domain.interfaces.sales.CashRegisterRepository
 import com.litvy.litvysales.domain.model.sales.CashRegister
 import kotlinx.coroutines.flow.Flow
@@ -31,11 +33,8 @@ class CashRegisterRepositoryImpl(
         return dao.getById(cashRegisterId)?.toDomain()
     }
 
-    override suspend fun getByName(name: String): CashRegister? {
-        return dao.getByName(name)?.toDomain()
-    }
-
-    override fun getByLocation(location: String): Flow<List<CashRegister?>> {
-        return dao.getByLocation(location).map { list -> list.map { it?.toDomain() } }
-    }
+    override fun getCashRegisters(filter: CashRegisterFilter) =
+        dao.getByFilter(CashRegisterQueryBuilder.build(filter)).map {
+            list -> list.map { it.toDomain() }
+        }
 }

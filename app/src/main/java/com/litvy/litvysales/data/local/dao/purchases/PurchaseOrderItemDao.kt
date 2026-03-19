@@ -18,5 +18,5 @@ interface PurchaseOrderItemDao {
     suspend fun getById(id: Int): PurchaseOrderItemEntity?
 
     @Query("SELECT * FROM purchaseOrderItem WHERE purchaseOrderId = :orderId")
-    suspend fun getByOrderId(orderId: Int): Flow<List<PurchaseOrderItemEntity>>
+    fun getByOrderId(orderId: Int): Flow<List<PurchaseOrderItemEntity>>
 }

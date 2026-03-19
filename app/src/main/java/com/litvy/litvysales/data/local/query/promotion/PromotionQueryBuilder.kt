@@ -2,6 +2,8 @@ package com.litvy.litvysales.data.local.query.promotion
 
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
+import com.litvy.litvysales.data.local.query.appendOrderBy
+import com.litvy.litvysales.data.local.query.appendPagination
 import com.litvy.litvysales.domain.filter.promotion.PromotionFilter
 
 object PromotionQueryBuilder {
@@ -18,7 +20,7 @@ object PromotionQueryBuilder {
             args.addAll(values)
         }
 
-        filter.name?.takeIf { it.isNotBlank() }.let {
+        filter.name?.takeIf { it.isNotBlank() }?.let {
             add("LOWER(name) LIKE LOWER(?)", "%$it%")
         }
 
@@ -31,26 +33,47 @@ object PromotionQueryBuilder {
         }
 
         filter.active?.let {
-            add("condition = ?", it)
+            add("active = ?", it)
         }
 
         filter.clearStock?.let {
             add("clearStock = ?", it)
         }
 
-        filter.startDate?.let {
-            add("startDate = ?", it)
+        filter.startDateFrom?.let {
+            add("startDate >= ?", it)
         }
 
-        filter.endDate?.let {
-            add("endDate = ?", it)
+        filter.startDateTo?.let {
+            add("startDate <= ?", it)
         }
 
-        filter.createdAt?.let {
-            add("createdAt = ?", it)
+        filter.endDateFrom?.let {
+            add("endDate >= ?", it)
         }
 
-        sql.append(" ORDER BY createdAt DESC")
+        filter.endDateTo?.let {
+            add("endDate <= ?", it)
+        }
+
+        filter.createdAtFrom?.let {
+            add("createdAt >= ?", it)
+        }
+
+        filter.createdAtTo?.let {
+            add("createdAt <= ?", it)
+        }
+
+        val orderColumn = when (filter.sortBy) {
+            com.litvy.litvysales.domain.filter.promotion.PromotionSortBy.CREATED_AT -> "createdAt"
+            com.litvy.litvysales.domain.filter.promotion.PromotionSortBy.NAME -> "name"
+            com.litvy.litvysales.domain.filter.promotion.PromotionSortBy.PRIORITY -> "priority"
+            com.litvy.litvysales.domain.filter.promotion.PromotionSortBy.START_DATE -> "startDate"
+            com.litvy.litvysales.domain.filter.promotion.PromotionSortBy.END_DATE -> "endDate"
+        }
+
+        sql.appendOrderBy(orderColumn, filter.sortDirection)
+        sql.appendPagination(args, filter.limit, filter.offset)
 
         return SimpleSQLiteQuery(sql.toString(), args.toTypedArray())
     }
