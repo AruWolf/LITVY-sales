@@ -92,6 +92,7 @@ class ProviderViewModel(
         }
     }
 
+    // Maneja el evento de navegación para regresar a la pantalla previa
     private fun onBackNavigation() {
         _state.update {
             it.copy(navigateBack = true)
@@ -103,6 +104,7 @@ class ProviderViewModel(
             it.copy(navigateBack = false)
         }
     }
+
 
     private fun observeProviders() {
         viewModelScope.launch {
@@ -119,10 +121,11 @@ class ProviderViewModel(
         }
     }
 
+    // Maneja el evento de selección de un proveedor de la lista, para generar el dialog de visualización de datos.
     private fun selectProvider(providerId: Int?) {
         val selected = _state.value.providers.firstOrNull { it.provider.id == providerId }
         _state.update {
-            it.copy(
+            it.copy( // Genera el dialog mediante los parametros
                 selectedProvider = selected,
                 isEditing = false,
                 isCreating = false,
@@ -132,6 +135,7 @@ class ProviderViewModel(
         }
     }
 
+    // Maneja el evento de creación de un proveedor, para generar el dialog de creación
     private fun startCreate() {
         _state.update {
             it.copy(
@@ -150,6 +154,7 @@ class ProviderViewModel(
         }
     }
 
+    // Maneja el cierre del modo edición del dialog
     private fun cancelEdit() {
         _state.update {
 
@@ -173,6 +178,7 @@ class ProviderViewModel(
         }
     }
 
+    // Maneja el formulario de edición y los datos editados
     private fun updateForm(
         name: String? = null,
         cuit: String? = null,
@@ -192,6 +198,7 @@ class ProviderViewModel(
         }
     }
 
+    // Maneja la polarización de los dias seleccionados para la visita del proveedor
     private fun toggleVisitDay(day: Int) {
         _state.update {
             val next = if (day in it.visitDays) it.visitDays - day else it.visitDays + day
@@ -202,6 +209,7 @@ class ProviderViewModel(
         }
     }
 
+    // Maneja el guardado de los datos cargados en formulario
     private fun save() {
         val current = _state.value
         val provider = Provider(
@@ -220,8 +228,9 @@ class ProviderViewModel(
                 updateProviderUseCase(provider, current.visitDays)
             }
 
+            // Manejo de validación de datos cargados
             when (result) {
-                ValidationResult.Success -> {
+                ValidationResult.Success -> { // Resultado exitoso
                     _state.update {
                         it.copy(
                             isEditing = false,
@@ -237,10 +246,11 @@ class ProviderViewModel(
                     }
 
                 }
-
+                // Resultado con errores
                 is ValidationResult.Failure -> {
                     _state.update {
                         it.copy(
+                            // Genera el mensaje correspondiente a los campos con errores
                             errors = result.errors.associate { issue -> issue.field to issue.message },
                             feedbackMessage = "Revisa los datos del proveedor."
                         )
@@ -252,6 +262,7 @@ class ProviderViewModel(
 
     private var filterJob: Job? = null
 
+    // Maneja los filtros aplicados para la busqueda de proveedores
     private fun applyFilters() {
         filterJob?.cancel()
 
@@ -293,6 +304,7 @@ class ProviderViewModel(
         }
     }
 
+    // Maneja la limpieza de filtros
     private fun clearFilters() {
         _state.update {
             it.copy(
