@@ -54,7 +54,7 @@ fun NavigationHost(
         }
 
         composable("providers") {
-            ProviderRoute()
+            ProviderRoute(navController)
         }
 
     }

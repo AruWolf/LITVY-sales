@@ -3,38 +3,34 @@ package com.litvy.litvysales.ui.purchases.provider
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.*
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.litvy.litvysales.LitvySalesApplication
+import com.litvy.litvysales.domain.filter.purchases.ProviderSortBy
 import com.litvy.litvysales.domain.model.purchases.ProviderWithVisitDays
+import com.litvy.litvysales.ui.util.SortIcon
 
 @Composable
-fun ProviderRoute() {
+fun ProviderRoute(
+    navController: NavHostController
+) {
     val application =
         LocalContext.current.applicationContext as LitvySalesApplication
     val container = application.container
@@ -43,7 +39,8 @@ fun ProviderRoute() {
         ProviderViewModelFactory(
             container.getProvidersWithVisitDaysUseCase,
             container.createProviderUseCase,
-            container.updateProviderUseCase
+            container.updateProviderUseCase,
+            container.getProviderUseCase
         )
     }
 
@@ -52,56 +49,97 @@ fun ProviderRoute() {
 
     ProviderScreen(
         state = state,
-        onEvent = viewModel::onEvent
+        onEvent = viewModel::onEvent,
+        onNavigateBack = {
+            navController.popBackStack()
+        }
     )
 }
 
 @Composable
 fun ProviderScreen(
     state: ProviderState,
-    onEvent: (ProviderEvent) -> Unit
+    onEvent: (ProviderEvent) -> Unit,
+    onNavigateBack: () -> Unit
 ) {
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // SNACKBAR
+    LaunchedEffect(state.feedbackMessage) {
+        state.feedbackMessage?.let {
+            snackbarHostState.showSnackbar(it)
+        }
+    }
+
+    // NAVEGACIÓN BACK
+    LaunchedEffect(state.navigateBack) {
+        if (state.navigateBack) {
+            onNavigateBack()
+            onEvent(ProviderEvent.OnDismissDialog)
+        }
+    }
+
     val isLandscape =
         LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    if (isLandscape) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            ProviderListPane(
-                state = state,
-                onEvent = onEvent,
-                modifier = Modifier.weight(0.9f)
-            )
-            ProviderDetailPane(
-                state = state,
-                onEvent = onEvent,
-                modifier = Modifier.weight(1.1f)
-            )
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { padding ->
+
+        if (isLandscape) {
+
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+
+                // IZQUIERDA — LISTA
+                ProviderListPane(
+                    state = state,
+                    onEvent = onEvent,
+                    modifier = Modifier.weight(0.7f)
+                )
+
+                // DERECHA — FILTROS + ACCIONES
+                ProviderFilterPane(
+                    state = state,
+                    onEvent = onEvent,
+                    modifier = Modifier.weight(0.3f)
+                )
+            }
+
+        } else {
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp)
+            ) {
+
+                ProviderListPaneVertical(
+                    state = state,
+                    onEvent = onEvent,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            ProviderListPane(
+
+        // LECTURA DE APERTURA DEL DIALOGO
+        if (state.showDialog) {
+            ProviderDialog(
                 state = state,
-                onEvent = onEvent,
-                modifier = Modifier.weight(1f)
-            )
-            ProviderDetailPane(
-                state = state,
-                onEvent = onEvent,
-                modifier = Modifier.weight(1f)
+                onEvent = onEvent
             )
         }
     }
 }
+
+
 
 @Composable
 private fun ProviderListPane(
@@ -114,8 +152,81 @@ private fun ProviderListPane(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Proveedores", style = MaterialTheme.typography.headlineSmall)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = { onEvent(ProviderEvent.OnBack) }
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Volver"
+                    )
+                }
 
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    text = "Proveedores",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+            }
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(state.providers, key = { it.provider.id ?: 0 }) { provider ->
+
+                    ProviderRow(
+                        provider = provider,
+                        selected = provider.provider.id == state.selectedProvider?.provider?.id,
+                        onClick = {
+                            onEvent(ProviderEvent.OnProviderSelected(provider.provider))
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProviderListPaneVertical(
+    state: ProviderState,
+    onEvent: (ProviderEvent) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(modifier = modifier.fillMaxHeight()) {
+
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+
+            // HEADER
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = { onEvent(ProviderEvent.OnBack) }
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Volver"
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    text = "Proveedores",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+            }
+
+            // 🔍 BUSCADOR
             OutlinedTextField(
                 value = state.search,
                 onValueChange = { onEvent(ProviderEvent.OnSearchChange(it)) },
@@ -124,6 +235,7 @@ private fun ProviderListPane(
                 singleLine = true
             )
 
+            // ➕ BOTÓN NUEVO
             Button(
                 onClick = { onEvent(ProviderEvent.OnAddNew) },
                 modifier = Modifier.fillMaxWidth()
@@ -131,15 +243,395 @@ private fun ProviderListPane(
                 Text("Nuevo proveedor")
             }
 
+            // 📋 LISTA
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(state.filteredProviders, key = { it.provider.id ?: 0 }) { provider ->
+                items(state.providers, key = { it.provider.id ?: 0 }) { provider ->
+
                     ProviderRow(
                         provider = provider,
                         selected = provider.provider.id == state.selectedProvider?.provider?.id,
-                        onClick = { onEvent(ProviderEvent.OnProviderSelected(provider.provider)) }
+                        onClick = {
+                            onEvent(ProviderEvent.OnProviderSelected(provider.provider))
+                        }
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProviderFilterPane(
+    state: ProviderState,
+    onEvent: (ProviderEvent) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(modifier = modifier.fillMaxHeight()) {
+
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+
+            Text(
+                text = "Filtros",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+
+                OutlinedTextField(
+                    value = state.search,
+                    onValueChange = { onEvent(ProviderEvent.OnSearchChange(it)) },
+                    label = { Text("Nombre") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true
+                )
+
+                IconButton(
+                    onClick = { onEvent(ProviderEvent.OnSortChange(ProviderSortBy.NAME)) }
+                ) {
+                    SortIcon(
+                        active = state.sortBy == ProviderSortBy.NAME,
+                        direction = state.sortDirection
+                    )
+                }
+            }
+
+            OutlinedTextField(
+                value = state.cuit,
+                onValueChange = { onEvent(ProviderEvent.OnCuitChange(it)) },
+                label = { Text("CUIT") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+
+            OutlinedTextField(
+                value = state.phone,
+                onValueChange = { onEvent(ProviderEvent.OnPhoneChange(it)) },
+                label = { Text("Teléfono") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = { onEvent(ProviderEvent.OnApplyFilters) },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Aplicar filtros")
+                }
+
+                OutlinedButton(
+                    onClick = { onEvent(ProviderEvent.OnClearFilters) },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Limpiar filtros")
+                }
+            }
+
+            Button(
+                onClick = { onEvent(ProviderEvent.OnAddNew) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Nuevo proveedor")
+            }
+        }
+    }
+}
+
+@Composable
+fun ProviderDialog(
+    state: ProviderState,
+    onEvent: (ProviderEvent) -> Unit
+) {
+    Dialog(
+        onDismissRequest = { onEvent(ProviderEvent.OnDismissDialog) },
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+
+        val isLandscape =
+            LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(if (isLandscape) 0.8f else 1f)
+                .fillMaxHeight(0.9f)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                ) {
+
+                    if (isLandscape) {
+                        ProviderDialogContentLandscape(state, onEvent)
+                    } else {
+                        ProviderDialogContent(state, onEvent)
+                    }
+                }
+
+                ProviderDialogActions(state, onEvent)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProviderDialogActions(
+    state: ProviderState,
+    onEvent: (ProviderEvent) -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+
+        if (!state.isEditing) {
+
+            Button(
+                onClick = { onEvent(ProviderEvent.OnEditClick) },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Editar")
+            }
+
+            OutlinedButton(
+                onClick = { onEvent(ProviderEvent.OnDismissDialog) },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Cerrar")
+            }
+
+        } else {
+
+            Button(
+                onClick = { onEvent(ProviderEvent.OnSave) },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(if (state.isCreating) "Crear" else "Guardar")
+            }
+
+            OutlinedButton(
+                onClick = { onEvent(ProviderEvent.OnCancelEdit) },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Cancelar")
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ProviderDialogContent(
+    state: ProviderState,
+    onEvent: (ProviderEvent) -> Unit
+) {
+    val readOnly = !state.isEditing
+
+    Text(
+        text = when {
+            state.isCreating -> "Nuevo proveedor"
+            state.isEditing -> "Editar proveedor"
+            else -> "Detalle del proveedor"
+        },
+        style = MaterialTheme.typography.headlineSmall
+    )
+
+    OutlinedTextField(
+        value = state.name,
+        onValueChange = { onEvent(ProviderEvent.OnNameChange(it)) },
+        label = { Text("Nombre") },
+        modifier = Modifier.fillMaxWidth(),
+        enabled = !readOnly,
+        isError = state.errors["name"] != null,
+        singleLine = true
+    )
+    state.errors["name"]?.let { ErrorText(it) }
+
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        val formattedCuit = formatCuit(state.cuit)
+
+        val cuitField = remember(formattedCuit) {
+            TextFieldValue(
+                text = formattedCuit,
+                selection = TextRange(formattedCuit.length)
+            )
+        }
+
+        OutlinedTextField(
+            value = cuitField,
+            onValueChange = { value ->
+                onEvent(ProviderEvent.OnCuitChange(value.text))
+            },
+            label = { Text("CUIT") },
+            modifier = Modifier.weight(1f),
+            enabled = !readOnly,
+            isError = state.errors["cuit"] != null,
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        )
+
+        OutlinedTextField(
+            value = state.phone,
+            onValueChange = { onEvent(ProviderEvent.OnPhoneChange(it)) },
+            label = { Text("Telefono") },
+            modifier = Modifier.weight(1f),
+            enabled = !readOnly,
+            isError = state.errors["telephoneNumber"] != null,
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        )
+    }
+
+    state.errors["cuit"]?.let { ErrorText(it) }
+    state.errors["telephoneNumber"]?.let { ErrorText(it) }
+
+    OutlinedTextField(
+        value = state.address,
+        onValueChange = { onEvent(ProviderEvent.OnAddressChange(it)) },
+        label = { Text("Direccion") },
+        modifier = Modifier.fillMaxWidth(),
+        enabled = !readOnly,
+        singleLine = true
+    )
+
+    OutlinedTextField(
+        value = state.email,
+        onValueChange = { onEvent(ProviderEvent.OnEmailChange(it)) },
+        label = { Text("Email") },
+        modifier = Modifier.fillMaxWidth(),
+        enabled = !readOnly,
+        isError = state.errors["email"] != null,
+        singleLine = true
+    )
+    state.errors["email"]?.let { ErrorText(it) }
+
+    Text("Dias de visita", style = MaterialTheme.typography.titleMedium)
+
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        dayOptions().forEach { (day, label) ->
+            val selected = day in state.visitDays
+
+            OutlinedButton(
+                onClick = { onEvent(ProviderEvent.OnVisitDayToggle(day)) },
+                enabled = !readOnly
+            ) {
+                Text(if (selected) "$label ✓" else label)
+            }
+        }
+    }
+
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ProviderDialogContentLandscape(
+    state: ProviderState,
+    onEvent: (ProviderEvent) -> Unit
+) {
+    val readOnly = !state.isEditing
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+        Text(
+            text = when {
+                state.isCreating -> "Nuevo proveedor"
+                state.isEditing -> "Editar proveedor"
+                else -> "Detalle del proveedor"
+            },
+            style = MaterialTheme.typography.headlineSmall
+        )
+
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+
+                OutlinedTextField(
+                    value = state.name,
+                    onValueChange = { onEvent(ProviderEvent.OnNameChange(it)) },
+                    label = { Text("Nombre") },
+                    enabled = !readOnly,
+                    isError = state.errors["name"] != null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = formatCuit(state.cuit),
+                    onValueChange = { onEvent(ProviderEvent.OnCuitChange(it)) },
+                    label = { Text("CUIT") },
+                    enabled = !readOnly,
+                    isError = state.errors["cuit"] != null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = state.phone,
+                    onValueChange = { onEvent(ProviderEvent.OnPhoneChange(it)) },
+                    label = { Text("Telefono") },
+                    enabled = !readOnly,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+
+                OutlinedTextField(
+                    value = state.address,
+                    onValueChange = { onEvent(ProviderEvent.OnAddressChange(it)) },
+                    label = { Text("Direccion") },
+                    enabled = !readOnly,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = state.email,
+                    onValueChange = { onEvent(ProviderEvent.OnEmailChange(it)) },
+                    label = { Text("Email") },
+                    enabled = !readOnly,
+                    isError = state.errors["email"] != null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Text("Dias de visita")
+
+                FlowRow {
+                    dayOptions().forEach { (day, label) ->
+                        val selected = day in state.visitDays
+
+                        OutlinedButton(
+                            onClick = { onEvent(ProviderEvent.OnVisitDayToggle(day)) },
+                            enabled = !readOnly
+                        ) {
+                            Text(if (selected) "$label ✓" else label)
+                        }
+                    }
                 }
             }
         }
@@ -153,12 +645,15 @@ private fun ProviderRow(
     onClick: () -> Unit
 ) {
     val containerColor =
-        if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent
+        if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.LightGray
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
+            .padding(horizontal = 4.dp, vertical = 2.dp),
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(
             modifier = Modifier
@@ -171,137 +666,6 @@ private fun ProviderRow(
             provider.provider.cuit?.let { Text("CUIT: $it") }
             provider.provider.telephoneNumber?.let { Text("Telefono: $it") }
             Text("Visitas: ${provider.visitDays.sorted().joinToString()}")
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun ProviderDetailPane(
-    state: ProviderState,
-    onEvent: (ProviderEvent) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(modifier = modifier.fillMaxHeight()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = when {
-                    state.isCreating -> "Nuevo proveedor"
-                    state.isEditing -> "Editar proveedor"
-                    state.selectedProvider != null -> "Detalle del proveedor"
-                    else -> "Sin proveedor seleccionado"
-                },
-                style = MaterialTheme.typography.headlineSmall
-            )
-
-            if (!state.isEditing && !state.isCreating && state.selectedProvider == null) {
-                Text("Selecciona un proveedor o crea uno nuevo para continuar.")
-                return@Column
-            }
-
-            val readOnly = !state.isEditing
-
-            OutlinedTextField(
-                value = state.name,
-                onValueChange = { onEvent(ProviderEvent.OnNameChange(it)) },
-                label = { Text("Nombre") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = !readOnly,
-                isError = state.errors["name"] != null
-            )
-            state.errors["name"]?.let { ErrorText(it) }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = state.cuit,
-                    onValueChange = { onEvent(ProviderEvent.OnCuitChange(it)) },
-                    label = { Text("CUIT") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    enabled = !readOnly,
-                    isError = state.errors["cuit"] != null
-                )
-                OutlinedTextField(
-                    value = state.phone,
-                    onValueChange = { onEvent(ProviderEvent.OnPhoneChange(it)) },
-                    label = { Text("Telefono") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    enabled = !readOnly,
-                    isError = state.errors["telephoneNumber"] != null
-                )
-            }
-            state.errors["cuit"]?.let { ErrorText(it) }
-            state.errors["telephoneNumber"]?.let { ErrorText(it) }
-
-            OutlinedTextField(
-                value = state.address,
-                onValueChange = { onEvent(ProviderEvent.OnAddressChange(it)) },
-                label = { Text("Direccion") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = !readOnly
-            )
-
-            OutlinedTextField(
-                value = state.email,
-                onValueChange = { onEvent(ProviderEvent.OnEmailChange(it)) },
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = !readOnly,
-                isError = state.errors["email"] != null
-            )
-            state.errors["email"]?.let { ErrorText(it) }
-
-            Text("Dias de visita", style = MaterialTheme.typography.titleMedium)
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                dayOptions().forEach { (day, label) ->
-                    val selected = day in state.visitDays
-                    OutlinedButton(
-                        onClick = { onEvent(ProviderEvent.OnVisitDayToggle(day)) },
-                        enabled = !readOnly,
-                        modifier = Modifier
-                    ) {
-                        Text(if (selected) "$label ✓" else label)
-                    }
-                }
-            }
-
-            state.feedbackMessage?.let {
-                Text(it, style = MaterialTheme.typography.bodyMedium)
-            }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (!state.isEditing) {
-                    Button(
-                        onClick = { onEvent(ProviderEvent.OnEditClick) },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Editar")
-                    }
-                } else {
-                    Button(
-                        onClick = { onEvent(ProviderEvent.OnSave) },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(if (state.isCreating) "Crear proveedor" else "Guardar cambios")
-                    }
-                    OutlinedButton(
-                        onClick = { onEvent(ProviderEvent.OnCancelEdit) },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Cancelar")
-                    }
-                }
-            }
         }
     }
 }
@@ -324,3 +688,13 @@ private fun dayOptions(): List<Pair<Int, String>> = listOf(
     6 to "Sab",
     7 to "Dom"
 )
+
+private fun formatCuit(cuit: String): String {
+    val digits = cuit.filter { it.isDigit() }
+
+    return when {
+        digits.length <= 2 -> digits
+        digits.length <= 10 -> "${digits.take(2)}-${digits.drop(2)}"
+        else -> "${digits.take(2)}-${digits.drop(2).take(8)}-${digits.drop(10)}"
+    }
+}

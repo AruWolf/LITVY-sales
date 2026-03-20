@@ -31,6 +31,7 @@ import com.litvy.litvysales.domain.useCase.purchases.GetInvoiceTypesUseCase
 import com.litvy.litvysales.domain.useCase.purchases.GetPurchasesUseCase
 import com.litvy.litvysales.domain.useCase.purchases.RegisterPurchaseUseCase
 import com.litvy.litvysales.domain.useCase.purchases.provider.CreateProviderUseCase
+import com.litvy.litvysales.domain.useCase.purchases.provider.GetProviderUseCase
 import com.litvy.litvysales.domain.useCase.purchases.provider.GetProvidersWithVisitDaysUseCase
 import com.litvy.litvysales.domain.useCase.purchases.provider.UpdateProviderUseCase
 import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.GetPurchaseOrderItemsUseCase
@@ -76,6 +77,7 @@ class AppContainer(context: Context) {
     val getActiveProductsUseCase = GetActiveProductsUseCase(productRepository)
     val searchProductsUseCase = SearchProductsUseCase(productRepository)
     val getProvidersWithVisitDaysUseCase = GetProvidersWithVisitDaysUseCase(providerRepository)
+    val getProviderUseCase = GetProviderUseCase(providerRepository)
     val getInvoiceTypesUseCase = GetInvoiceTypesUseCase(invoiceTypeRepository)
     val getPaymentMethodsUseCase = GetPaymentMethodsUseCase(paymentMethodRepository)
     val getPurchasesUseCase = GetPurchasesUseCase(purchaseRepository)

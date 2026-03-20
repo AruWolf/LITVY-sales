@@ -3,12 +3,16 @@ package com.litvy.litvysales.ui.purchases.provider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.litvy.litvysales.domain.filter.common.QuerySortDirection
+import com.litvy.litvysales.domain.filter.purchases.ProviderFilter
 import com.litvy.litvysales.domain.model.purchases.Provider
 import com.litvy.litvysales.domain.model.purchases.ProviderWithVisitDays
 import com.litvy.litvysales.domain.useCase.purchases.provider.CreateProviderUseCase
+import com.litvy.litvysales.domain.useCase.purchases.provider.GetProviderUseCase
 import com.litvy.litvysales.domain.useCase.purchases.provider.GetProvidersWithVisitDaysUseCase
 import com.litvy.litvysales.domain.useCase.purchases.provider.UpdateProviderUseCase
 import com.litvy.litvysales.domain.validation.ValidationResult
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,30 +22,85 @@ import kotlinx.coroutines.launch
 class ProviderViewModel(
     private val getProvidersWithVisitDaysUseCase: GetProvidersWithVisitDaysUseCase,
     private val createProviderUseCase: CreateProviderUseCase,
-    private val updateProviderUseCase: UpdateProviderUseCase
+    private val updateProviderUseCase: UpdateProviderUseCase,
+    private val getProviderUseCase: GetProviderUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProviderState())
     val state: StateFlow<ProviderState> = _state.asStateFlow()
 
     init {
-        observeProviders()
+        applyFilters()
     }
 
     fun onEvent(event: ProviderEvent) {
         when (event) {
-            is ProviderEvent.OnSearchChange -> _state.update { it.copy(search = event.value) }
-            is ProviderEvent.OnProviderSelected -> selectProvider(event.provider.id)
-            ProviderEvent.OnAddNew -> startCreate()
+            is ProviderEvent.OnSearchChange -> {
+                _state.update { it.copy(search = event.value) }
+            }
+            ProviderEvent.OnApplyFilters -> applyFilters()
+            ProviderEvent.OnClearFilters -> clearFilters()
+            is ProviderEvent.OnSortChange -> {
+                _state.update {
+
+                    val isSameField = it.sortBy == event.sortBy
+
+                    it.copy(
+                        sortBy = event.sortBy,
+                        sortDirection = if (isSameField) {
+                            if (it.sortDirection == QuerySortDirection.ASC)
+                                QuerySortDirection.DESC
+                            else QuerySortDirection.ASC
+                        } else {
+                            QuerySortDirection.ASC
+                        }
+                    )
+                }
+
+                applyFilters()
+            }
+            is ProviderEvent.OnProviderSelected -> {
+                selectProvider(event.provider.id)
+                _state.update { it.copy(showDialog = true) }
+            }
+            ProviderEvent.OnAddNew -> {
+                startCreate()
+                _state.update { it.copy(showDialog = true) }
+            }
             ProviderEvent.OnEditClick -> _state.update { it.copy(isEditing = true, isCreating = false, feedbackMessage = null) }
             ProviderEvent.OnCancelEdit -> cancelEdit()
             ProviderEvent.OnSave -> save()
+            ProviderEvent.OnDismissDialog -> {
+                _state.update {
+                    it.copy(
+                        showDialog = false,
+                        isEditing = false,
+                        isCreating = false,
+                        errors = emptyMap(),
+                        feedbackMessage = null
+                    )
+                }
+            }
+            ProviderEvent.OnBack -> onBackNavigation()
+
             is ProviderEvent.OnNameChange -> updateForm(name = event.value)
             is ProviderEvent.OnCuitChange -> updateForm(cuit = event.value)
             is ProviderEvent.OnPhoneChange -> updateForm(phone = event.value)
             is ProviderEvent.OnAddressChange -> updateForm(address = event.value)
             is ProviderEvent.OnEmailChange -> updateForm(email = event.value)
             is ProviderEvent.OnVisitDayToggle -> toggleVisitDay(event.day)
+        }
+    }
+
+    private fun onBackNavigation() {
+        _state.update {
+            it.copy(navigateBack = true)
+        }
+    }
+
+    fun onNavigationHandled() {
+        _state.update {
+            it.copy(navigateBack = false)
         }
     }
 
@@ -93,12 +152,24 @@ class ProviderViewModel(
 
     private fun cancelEdit() {
         _state.update {
-            it.copy(
-                isEditing = false,
-                isCreating = false,
-                errors = emptyMap(),
-                feedbackMessage = null
-            ).hydrateFormFromSelection()
+
+            if (it.isCreating) {
+                it.copy(
+                    showDialog = false,
+                    isEditing = false,
+                    isCreating = false,
+                    errors = emptyMap(),
+                    feedbackMessage = null
+                )
+            }
+            else {
+                it.copy(
+                    isEditing = false,
+                    isCreating = false,
+                    errors = emptyMap(),
+                    feedbackMessage = null
+                ).hydrateFormFromSelection()
+            }
         }
     }
 
@@ -111,12 +182,12 @@ class ProviderViewModel(
     ) {
         _state.update {
             it.copy(
-                name = name ?: it.name,
-                cuit = cuit ?: it.cuit,
-                phone = phone ?: it.phone,
+                name = name?.replaceFirstChar { it.uppercase() } ?: it.name,
+                cuit = cuit?.filter { it.isDigit() }?.take(11) ?: it.cuit,
+                phone = phone?.filter { it.isDigit() }?.take(11) ?: it.phone,
                 address = address ?: it.address,
-                email = email ?: it.email,
-                errors = it.errors - setOf("name", "cuit", "telephoneNumber", "email")
+                email = email?.trim() ?: it.email,
+                errors = emptyMap()
             )
         }
     }
@@ -124,7 +195,10 @@ class ProviderViewModel(
     private fun toggleVisitDay(day: Int) {
         _state.update {
             val next = if (day in it.visitDays) it.visitDays - day else it.visitDays + day
-            it.copy(visitDays = next)
+            it.copy(
+                visitDays = next,
+                errors = it.errors - "visitDays"
+            )
         }
     }
 
@@ -157,9 +231,11 @@ class ProviderViewModel(
                                 "Proveedor creado correctamente."
                             } else {
                                 "Proveedor actualizado correctamente."
-                            }
+                            },
+                            showDialog = false
                         )
                     }
+
                 }
 
                 is ValidationResult.Failure -> {
@@ -172,6 +248,63 @@ class ProviderViewModel(
                 }
             }
         }
+    }
+
+    private var filterJob: Job? = null
+
+    private fun applyFilters() {
+        filterJob?.cancel()
+
+        filterJob = viewModelScope.launch {
+
+            val current = _state.value
+
+            val filter = ProviderFilter(
+                name = current.search,
+                cuit = current.cuit,
+                telephoneNumber = current.phone,
+                address = current.address,
+                email = current.email,
+                sortBy = current.sortBy,
+                sortDirection = current.sortDirection
+            )
+
+            getProviderUseCase(filter).collect { providers ->
+
+                _state.update {
+                    it.copy(
+                        providers = providers.map { provider ->
+                            ProviderWithVisitDays(provider, emptySet())
+                        }
+                    )
+                }
+
+                val selectedId = _state.value.selectedProvider?.provider?.id
+
+                val newSelected = providers.firstOrNull { it.id == selectedId }
+
+                _state.update {
+                    it.copy(
+                        providers = providers.map { ProviderWithVisitDays(it, emptySet()) },
+                        selectedProvider = newSelected?.let { ProviderWithVisitDays(it, emptySet()) }
+                    )
+                }
+            }
+        }
+    }
+
+    private fun clearFilters() {
+        _state.update {
+            it.copy(
+                search = "",
+                cuit = "",
+                phone = "",
+                address = "",
+                email = ""
+            )
+        }
+
+        applyFilters()
     }
 
     private fun ProviderState.hydrateFormFromSelection(): ProviderState {
@@ -194,7 +327,8 @@ class ProviderViewModel(
 class ProviderViewModelFactory(
     private val getProvidersWithVisitDaysUseCase: GetProvidersWithVisitDaysUseCase,
     private val createProviderUseCase: CreateProviderUseCase,
-    private val updateProviderUseCase: UpdateProviderUseCase
+    private val updateProviderUseCase: UpdateProviderUseCase,
+    private val getProviderUseCase: GetProviderUseCase
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
@@ -202,7 +336,8 @@ class ProviderViewModelFactory(
         return ProviderViewModel(
             getProvidersWithVisitDaysUseCase,
             createProviderUseCase,
-            updateProviderUseCase
+            updateProviderUseCase,
+            getProviderUseCase
         ) as T
     }
 }

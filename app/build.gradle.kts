@@ -62,6 +62,10 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")
     implementation("androidx.work:work-runtime-ktx:2.11.1")
+    implementation("androidx.compose.foundation:foundation:1.10.5")
+    implementation("androidx.compose.material3:material3:1.4.0")
+    implementation("androidx.compose.runtime:runtime:1.10.5")
+    implementation("androidx.compose.ui:ui:1.10.5")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 
