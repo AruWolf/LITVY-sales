@@ -56,6 +56,15 @@ fun ProviderListPane(
                     text = "Proveedores",
                     style = MaterialTheme.typography.headlineSmall
                 )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Botón para crear un nuevo proveedor
+                Button(
+                    onClick = { onEvent(ProviderEvent.OnAddNew) } // Abre el dialog para crear un nuevo proveedor
+                ) {
+                    Text("Nuevo proveedor")
+                }
             }
 
             // Columna que contiene la lista de proveedores existentes en sistema. Permite scrolleo
@@ -240,14 +249,6 @@ fun ProviderFilterPane(
                 ) {
                     Text("Limpiar filtros")
                 }
-            }
-
-            // Botón para crear un nuevo proveedor
-            Button(
-                onClick = { onEvent(ProviderEvent.OnAddNew) }, // Abre el dialog para crear un nuevo proveedor
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Nuevo proveedor")
             }
         }
     }

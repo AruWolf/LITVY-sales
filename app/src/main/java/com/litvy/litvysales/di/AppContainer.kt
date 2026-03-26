@@ -21,6 +21,7 @@ import com.litvy.litvysales.domain.useCase.catalog.category.GetCategoriesUseCase
 import com.litvy.litvysales.domain.useCase.catalog.category.UpdateCategoryUseCase
 import com.litvy.litvysales.domain.useCase.catalog.product.CreateProductUseCase
 import com.litvy.litvysales.domain.useCase.catalog.product.GetActiveProductsUseCase
+import com.litvy.litvysales.domain.useCase.catalog.product.GetActiveProductsWithBrandUseCase
 import com.litvy.litvysales.domain.useCase.catalog.product.GetProductByBrandUseCase
 import com.litvy.litvysales.domain.useCase.catalog.product.SearchProductsUseCase
 import com.litvy.litvysales.domain.useCase.catalog.product.UpdateProductUseCase
@@ -34,6 +35,7 @@ import com.litvy.litvysales.domain.useCase.purchases.provider.CreateProviderUseC
 import com.litvy.litvysales.domain.useCase.purchases.provider.GetProviderUseCase
 import com.litvy.litvysales.domain.useCase.purchases.provider.GetProvidersWithVisitDaysUseCase
 import com.litvy.litvysales.domain.useCase.purchases.provider.UpdateProviderUseCase
+import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.CreatePurchaseOrderUseCase
 import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.GetPurchaseOrderItemsUseCase
 import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.GetPurchaseOrdersUseCase
 import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.UpdatePurchaseOrderUseCase
@@ -74,6 +76,7 @@ class AppContainer(context: Context) {
     val getSubCategoriesByCategoryUseCase = GetSubCategoriesByCategoryUseCase(subCategoryRepository)
     val getBrandBySubCategoryUseCase = GetBrandBySubCategoryUseCase(brandRepository)
     val getProductByBrandUseCase = GetProductByBrandUseCase(productRepository)
+    val getActiveProductsWithBrandUseCase = GetActiveProductsWithBrandUseCase(productRepository)
     val getActiveProductsUseCase = GetActiveProductsUseCase(productRepository)
     val searchProductsUseCase = SearchProductsUseCase(productRepository)
     val getProvidersWithVisitDaysUseCase = GetProvidersWithVisitDaysUseCase(providerRepository)
@@ -89,6 +92,7 @@ class AppContainer(context: Context) {
     val createBrandUseCase = CreateBrandUseCase(brandRepository)
     val createProductUseCase = CreateProductUseCase(productRepository, brandRepository)
     val createProviderUseCase = CreateProviderUseCase(providerRepository)
+    val createPurchaseOrderUseCase = CreatePurchaseOrderUseCase(purchaseOrderRepository)
 
     val updateCategoryUseCase = UpdateCategoryUseCase(categoryRepository)
     val updateSubCategoryUseCase = UpdateSubCategoryUseCase(subCategoryRepository)

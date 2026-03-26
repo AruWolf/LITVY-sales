@@ -45,8 +45,8 @@ interface ProductDao {
     suspend fun countByName(name: String, brandId: Int): Int
 
     @Transaction
-    @Query("SELECT * FROM product WHERE id = :productId")
-    suspend fun getProductWithBrand(productId: Int): ProductWithBrand?
+    @Query("SELECT * FROM product WHERE active = 1")
+    fun getActiveProductsWithBrand(): Flow<List<ProductWithBrand>>
 
     @Query("SELECT COUNT(*) FROM product WHERE brandId = :brandId")
     suspend fun countByBrand(brandId: Int): Int

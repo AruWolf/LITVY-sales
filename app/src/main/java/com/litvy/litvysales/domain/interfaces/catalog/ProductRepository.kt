@@ -1,6 +1,7 @@
 package com.litvy.litvysales.domain.interfaces.catalog
 
 import com.litvy.litvysales.domain.model.catalog.Product
+import com.litvy.litvysales.domain.model.catalog.ProductWithBrand
 import kotlinx.coroutines.flow.Flow
 
 interface ProductRepository {
@@ -9,7 +10,7 @@ interface ProductRepository {
     fun getActiveProducts(): Flow<List<Product>>
     fun getByBrand(brandId: Int): Flow<List<Product>>
     fun searchByName(query: String): Flow<List<Product>>
-    suspend fun getProductWithBrand(productId: Int)
+    fun getActiveProductsWithBrand(): Flow<List<ProductWithBrand>>
     suspend fun countByBrand(brandId: Int): Int
     suspend fun deactivate(productId: Int, updatedAt: Long)
     suspend fun activate(productId: Int, updatedAt: Long)

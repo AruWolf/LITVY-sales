@@ -5,6 +5,7 @@ import com.litvy.litvysales.data.mapper.catalog.toDomain
 import com.litvy.litvysales.data.mapper.catalog.toEntity
 import com.litvy.litvysales.domain.interfaces.catalog.ProductRepository
 import com.litvy.litvysales.domain.model.catalog.Product
+import com.litvy.litvysales.domain.model.catalog.ProductWithBrand
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -34,8 +35,9 @@ class ProductRepositoryImpl(
             .map { list -> list.map { it.toDomain() } }
     }
 
-    override suspend fun getProductWithBrand(productId: Int) {
-        TODO("Not yet implemented")
+    override fun getActiveProductsWithBrand(): Flow<List<ProductWithBrand>> {
+        return productDao.getActiveProductsWithBrand()
+            .map { list -> list.map { it.toDomain() } }
     }
 
     override suspend fun countByBrand(brandId: Int): Int {

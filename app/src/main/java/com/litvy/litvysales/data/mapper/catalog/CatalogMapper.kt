@@ -2,6 +2,8 @@ package com.litvy.litvysales.data.mapper.catalog
 
 import com.litvy.litvysales.data.local.entity.catalog.*
 import com.litvy.litvysales.domain.model.catalog.*
+import com.litvy.litvysales.data.local.relation.ProductWithBrand as DataProductWithBrand
+import com.litvy.litvysales.domain.model.catalog.ProductWithBrand as DomProductWithBrand
 
 fun CategoryEntity.toDomain(): Category =
     Category(
@@ -65,6 +67,22 @@ fun ProductEntity.toDomain(): Product =
         createdAt = createdAt,
         updatedAt = updatedAt
     )
+
+fun DataProductWithBrand.toDomain(): DomProductWithBrand {
+    return DomProductWithBrand(
+        id = product.id ?: 0,
+        name = product.name,
+        brandId = product.brandId,
+        brandName = brand.name,
+        purchasePriceInCents = product.purchasePriceInCents,
+        salePriceInCents = product.salePriceInCents,
+        hasExpiration = product.hasExpiration,
+        isWeighable = product.isWeighable,
+        active = product.active,
+        createdAt = product.createdAt,
+        updatedAt = product.updatedAt
+    )
+}
 
 
 fun SubCategoryEntity.toDomain(): SubCategory =
