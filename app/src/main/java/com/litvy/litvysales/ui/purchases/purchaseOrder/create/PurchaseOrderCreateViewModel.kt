@@ -10,8 +10,10 @@ import com.litvy.litvysales.domain.model.purchases.PurchaseOrder
 import com.litvy.litvysales.domain.model.purchases.PurchaseOrderItem
 import com.litvy.litvysales.domain.validation.ValidationResult
 import com.litvy.litvysales.ui.util.model.PurchaseOrderItemUi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -21,6 +23,8 @@ class PurchaseOrderCreateViewModel(
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PurchaseOrderCreateState())
+    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
     val state: StateFlow<PurchaseOrderCreateState> = _state
 
     init {
@@ -230,6 +234,10 @@ class PurchaseOrderCreateViewModel(
                             items = emptyList(),
                             selectedProviderId = null
                         )
+                    }
+
+                    viewModelScope.launch {
+                        _uiEvent.emit(UiEvent.Success)
                     }
                 }
 

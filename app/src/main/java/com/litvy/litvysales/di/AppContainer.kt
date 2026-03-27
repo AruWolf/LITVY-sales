@@ -12,6 +12,8 @@ import com.litvy.litvysales.data.repository.purchases.InvoiceTypeRepositoryImpl
 import com.litvy.litvysales.data.repository.purchases.ProviderRepositoryImpl
 import com.litvy.litvysales.data.repository.purchases.PurchaseOrderRepositoryImpl
 import com.litvy.litvysales.data.repository.purchases.PurchaseRepositoryImpl
+import com.litvy.litvysales.data.repository.user.RoleRepositoryImpl
+import com.litvy.litvysales.data.repository.user.UserRepositoryImpl
 import com.litvy.litvysales.data.repository.util.PaymentMethodRepositoryImpl
 import com.litvy.litvysales.domain.useCase.catalog.brand.CreateBrandUseCase
 import com.litvy.litvysales.domain.useCase.catalog.brand.GetBrandBySubCategoryUseCase
@@ -59,6 +61,8 @@ class AppContainer(context: Context) {
     val stockBatchDao = database.stockBatchDao()
     val stockMovementDao = database.stockMovementDao()
     val paymentMethodDao = database.paymentMethodDao()
+    val userDao = database.userDao()
+    val roleDao = database.roleDao()
 
     val categoryRepository = CategoryRepositoryImpl(categoryDao, subCategoryDao)
     val subCategoryRepository = SubCategoryRepositoryImpl(subCategoryDao, brandDao)
@@ -71,6 +75,8 @@ class AppContainer(context: Context) {
     val stockBatchRepository = StockBatchRepositoryImpl(stockBatchDao)
     val stockMovementRepository = StockMovementRepositoryImpl(stockMovementDao)
     val paymentMethodRepository = PaymentMethodRepositoryImpl(paymentMethodDao)
+    val userRepository = UserRepositoryImpl(userDao)
+    val roleRepository = RoleRepositoryImpl(roleDao)
 
     val getCategoriesUseCase = GetCategoriesUseCase(categoryRepository)
     val getSubCategoriesByCategoryUseCase = GetSubCategoriesByCategoryUseCase(subCategoryRepository)

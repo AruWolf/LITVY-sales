@@ -1,20 +1,22 @@
 package com.litvy.litvysales.ui.purchases.purchaseOrder.create
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import com.litvy.litvysales.domain.model.catalog.ProductWithBrand
 import com.litvy.litvysales.util.MoneyFormatter
 
-
+// Elemento compose para generar lista desplegable de seleccion de elementos
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DropdownSelector(
-    label: String,
+    label: @Composable () -> Unit,
     items: List<String>,
     selectedValue: String,
     onSelect: (Int) -> Unit
@@ -27,11 +29,12 @@ fun DropdownSelector(
         onExpandedChange = { expanded = !expanded }
     ) {
 
+        // Campo para ingresar el elemento seleccionado
         OutlinedTextField(
             value = selectedValue,
             onValueChange = {},
             readOnly = true,
-            label = { Text(label) },
+            label = label,
             modifier = Modifier
                 .menuAnchor()
                 .fillMaxWidth(),
@@ -40,10 +43,12 @@ fun DropdownSelector(
             }
         )
 
+        // Lista desplegable de elementos disponibles para selección
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
+            // Iterador para generar un item de lista por cada elemento disponible encontrado
             items.forEachIndexed { index, text ->
                 DropdownMenuItem(
                     text = { Text(text) },
@@ -58,11 +63,13 @@ fun DropdownSelector(
     }
 }
 
+// Generador de campos de busqueda y filtros
 @Composable
 fun SearchAndFilters(
     state: PurchaseOrderCreateState,
     onEvent: (PurchaseOrderCreateEvent) -> Unit
 ) {
+
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
 
         // Buscador
@@ -80,7 +87,7 @@ fun SearchAndFilters(
 
             Box(Modifier.weight(1f)) {
                 DropdownSelector(
-                    label = "Categoría",
+                    label = {Text("Categoría")},
                     items = state.categories.map { it.name },
                     selectedValue = state.categories
                         .firstOrNull { it.id == state.selectedCategoryId }
@@ -95,7 +102,13 @@ fun SearchAndFilters(
 
             Box(Modifier.weight(1f)) {
                 DropdownSelector(
-                    label = "Subcategoría",
+                    label = {
+                        Text(
+                            text = "Subcategoría",
+                            maxLines = 2,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    },
                     items = state.subCategories.map { it.name },
                     selectedValue = state.subCategories
                         .firstOrNull { it.id == state.selectedSubCategoryId }
@@ -110,7 +123,7 @@ fun SearchAndFilters(
         }
 
         DropdownSelector(
-            label = "Marca (opcional)",
+            label = {Text("Marca (Opcional)")},
             items = listOf("Todas") + state.brands.map { it.name },
             selectedValue = state.brands
                 .firstOrNull { it.id == state.selectedBrandId }
@@ -128,6 +141,7 @@ fun SearchAndFilters(
     }
 }
 
+// Generador de Lista de productos
 @Composable
 fun ProductList(
     products: List<ProductWithBrand>,
@@ -136,6 +150,7 @@ fun ProductList(
     modifier: Modifier = Modifier
 ) {
 
+    // Mensajes para el caso de lista vacia/sin resultados
     if (products.isEmpty()) {
 
         val message = when {
@@ -158,11 +173,13 @@ fun ProductList(
         return
     }
 
+    // Lista scrolleable de productos
     LazyColumn(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
 
+        // Iteración para la generación de cada producto encontrado
         items(products) { product ->
 
             Column(
@@ -174,8 +191,10 @@ fun ProductList(
                     .padding(12.dp)
             ) {
 
+                // Nombre del producto
                 Text(product.name)
 
+                // Precios de compra y venta
                 val purchase = product.purchasePriceInCents ?: 0
                 val sale = product.salePriceInCents ?: 0
 

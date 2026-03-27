@@ -22,4 +22,5 @@ sealed interface PurchaseOrderCreateEvent {
     data class OnCategorySelected(val id: Int) : PurchaseOrderCreateEvent
     data class OnSubCategorySelected(val id: Int) : PurchaseOrderCreateEvent
     data class OnBrandSelected(val id: Int?) : PurchaseOrderCreateEvent
+
 }
