@@ -6,9 +6,10 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -37,13 +38,10 @@ fun PurchaseOrderCreateRoute(
         state = state,
         onEvent = viewModel::onEvent,
         onBack = {
-            navController.previousBackStackEntry
-                ?.savedStateHandle
-                ?.set("order_created", true)
-
             navController.popBackStack()
         },
-        viewModel = viewModel
+        viewModel = viewModel,
+        navController = navController
     )
 }
 
@@ -54,7 +52,8 @@ fun PurchaseOrderCreateScreen(
     state: PurchaseOrderCreateState,
     onEvent: (PurchaseOrderCreateEvent) -> Unit,
     onBack: () -> Unit,
-    viewModel: PurchaseOrderCreateViewModel
+    viewModel: PurchaseOrderCreateViewModel,
+    navController: NavController
 ) {
 
     var isDatePickerOpen by remember { mutableStateOf(false) }
@@ -66,6 +65,10 @@ fun PurchaseOrderCreateScreen(
         viewModel.uiEvent.collect { event ->
             when (event) {
                 is UiEvent.Success -> {
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("order_created", true)
+
                     onBack()
                 }
                 is UiEvent.Error -> {
@@ -77,12 +80,13 @@ fun PurchaseOrderCreateScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) {
+    ) { paddingValues ->
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(8.dp),
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
@@ -117,6 +121,12 @@ fun PurchaseOrderCreateScreen(
                             OutlinedTextField(
                                 value = selectedProviderName,
                                 onValueChange = {},
+                                isError = state.fieldErrors.containsKey("providerId"),
+                                supportingText = {
+                                    state.fieldErrors["providerId"]?.let {
+                                        Text(it)
+                                    }
+                                },
                                 readOnly = true,
                                 label = { Text("Proveedor") },
                                 trailingIcon = {
@@ -183,6 +193,14 @@ fun PurchaseOrderCreateScreen(
                         ) {
                             Text("Productos", style = MaterialTheme.typography.headlineSmall)
 
+                            state.fieldErrors["items"]?.let {
+                                Text(
+                                    text = it,
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+
                             // BOTON PARA AGREGAR PRODUCTO
                             Button(onClick = { onEvent(PurchaseOrderCreateEvent.OnAddItem) }) {
                                 Text("Agregar producto")
@@ -195,9 +213,14 @@ fun PurchaseOrderCreateScreen(
                         ) {
                             itemsIndexed(state.items) { index, item ->
 
+                                val productError = state.fieldErrors["items[$index].product"]
+                                val quantityError = state.fieldErrors["items[$index].quantity"]
+
                                 // TARJETAS ITEMS DE CADA PRODUCTO CARGADO
                                 PurchaseOrderItemCard(
                                     item = item,
+                                    errorProduct = productError,
+                                    errorQuantity = quantityError,
 
                                     // EVENTO DE SELECCIÓN DE PRODUCTO
                                     onSelectProduct = {
@@ -256,10 +279,6 @@ fun PurchaseOrderCreateScreen(
                             style = MaterialTheme.typography.titleMedium
                         )
 
-                    state.error?.let {
-                        Text(it)
-                    }
-
                 }
 
 
@@ -276,6 +295,12 @@ fun PurchaseOrderCreateScreen(
                         value = selectedProviderName,
                         onValueChange = {},
                         readOnly = true,
+                        isError = state.fieldErrors.containsKey("providerId"),
+                        supportingText = {
+                            state.fieldErrors["providerId"]?.let{
+                                Text(it)
+                            }
+                        },
                         label = { Text("Proveedor") },
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
@@ -342,30 +367,38 @@ fun PurchaseOrderCreateScreen(
                     }
                 }
 
+                state.fieldErrors["items"]?.let{
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
 
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.weight(1f)
                 ) {
+
+
                     itemsIndexed(state.items) { index, item ->
 
-                        // TARJETAS ITEMS DE CADA PRODUCTO CARGADO
+                        val productError = state.fieldErrors["items[$index].product"]
+                        val quantityError = state.fieldErrors["items[$index].quantity"]
+
                         PurchaseOrderItemCard(
                             item = item,
+                            errorProduct = productError,
+                            errorQuantity = quantityError,
 
-                            // EVENTO DE SELECCIÓN DE PRODUCTO
                             onSelectProduct = {
                                 onEvent(PurchaseOrderCreateEvent.OnOpenProductDialog(index))
                             },
-
-                            // EVENTO DE CAMBIO DE CANTIDAD DEL PRODUCTO SELECCIONADO
                             onQuantityChange = {
                                 onEvent(
                                     PurchaseOrderCreateEvent.OnQuantityChange(index, it)
                                 )
                             },
-
-                            // EVENTO DE ELIMINACIÓN DE INSTANCIA DE PRODUCTO CARGADO
                             onRemove = {
                                 onEvent(
                                     PurchaseOrderCreateEvent.OnRemoveItem(index)
@@ -391,10 +424,6 @@ fun PurchaseOrderCreateScreen(
                     )
                 }
 
-                state.error?.let {
-                    Text(it)
-                }
-
                 // BOTONES CANCELAR Y GUARDAR
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -416,32 +445,68 @@ fun PurchaseOrderCreateScreen(
 
             if (isDatePickerOpen) {
 
-                val datePickerState = androidx.compose.material3.rememberDatePickerState()
+                val datePickerState = rememberDatePickerState()
 
-                androidx.compose.material3.DatePickerDialog(
-                    onDismissRequest = { isDatePickerOpen = false },
-                    confirmButton = {
-                        Button(onClick = {
-                            val millis = datePickerState.selectedDateMillis
+                if (!isLandscape) {
 
-                            millis?.let {
-                                val formatted = java.text.SimpleDateFormat(
-                                    "dd/MM/yyyy",
-                                    java.util.Locale("es", "AR")
-                                ).format(java.util.Date(it))
+                    DatePickerDialog(
+                        onDismissRequest = { isDatePickerOpen = false },
+                        confirmButton = {
+                            Button(onClick = {
+                                datePickerState.selectedDateMillis?.let { millis ->
+                                    val formatted = java.text.SimpleDateFormat("dd/MM/yyyy")
+                                        .format(java.util.Date(millis))
 
-                                onEvent(
-                                    PurchaseOrderCreateEvent.OnDateChange(formatted)
-                                )
+                                    onEvent(PurchaseOrderCreateEvent.OnDateChange(formatted))
+                                }
+                                isDatePickerOpen = false
+                            }) {
+                                Text("Aceptar")
                             }
+                        }
+                    ) {
+                        DatePicker(state = datePickerState)
+                    }
 
-                            isDatePickerOpen = false
-                        }) {
-                            Text("Aceptar")
+                } else {
+
+                    Dialog(
+                        onDismissRequest = { isDatePickerOpen = false },
+                        properties = DialogProperties(usePlatformDefaultWidth = false)
+                    ) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth(0.6f)
+                                .fillMaxHeight(0.9f)
+                        ) {
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp)
+                                    .verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+
+                                DatePicker(state = datePickerState)
+
+                                Button(
+                                    onClick = {
+                                        datePickerState.selectedDateMillis?.let { millis ->
+                                            val formatted = java.text.SimpleDateFormat("dd/MM/yyyy")
+                                                .format(java.util.Date(millis))
+
+                                            onEvent(PurchaseOrderCreateEvent.OnDateChange(formatted))
+                                        }
+                                        isDatePickerOpen = false
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("Aceptar")
+                                }
+                            }
                         }
                     }
-                ) {
-                    androidx.compose.material3.DatePicker(state = datePickerState)
                 }
             }
 

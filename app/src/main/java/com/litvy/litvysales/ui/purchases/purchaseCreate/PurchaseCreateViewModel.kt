@@ -135,6 +135,14 @@ class PurchaseCreateViewModel(
                 }
             }
             is PurchaseCreateEvent.AddProductDialog -> handleAddProductDialogEvent(event.event)
+
+            is PurchaseCreateEvent.OpenOrderDialog -> {
+                _state.update { it.copy(showOrderDialog = true) }
+            }
+
+            is PurchaseCreateEvent.CloseOrderDialog -> {
+                _state.update { it.copy(showOrderDialog = false) }
+            }
         }
     }
 
@@ -275,12 +283,12 @@ class PurchaseCreateViewModel(
                 it.copy(
                     selectedPurchaseOrder = null,
                     pendingPurchaseOrder = null,
-                    showOrderConflictDialog = false
-                )
+                    showOrderConflictDialog = false,
+                    items = emptyList()
+                ).withRecalculatedTotals()
             }
             return
         }
-
         if (_state.value.items.isNotEmpty()) {
             _state.update {
                 it.copy(

@@ -35,10 +35,20 @@ fun PurchaseItemsList(
     onUnitPriceChange: (String, String) -> Unit
 ) {
     Column(modifier = modifier) {
-        Text(
-            text = "Productos de la compra",
-            style = MaterialTheme.typography.titleMedium
-        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Productos de la compra",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Button(onClick = onAddItem) {
+                Text("+ Agregar")
+            }
+        }
 
         Spacer(Modifier.height(8.dp))
 
@@ -122,12 +132,6 @@ fun PurchaseItemsList(
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall
             )
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        Button(onClick = onAddItem) {
-            Text("Agregar producto")
         }
     }
 }

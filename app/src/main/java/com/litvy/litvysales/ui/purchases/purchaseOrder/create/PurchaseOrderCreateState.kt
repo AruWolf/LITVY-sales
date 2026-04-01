@@ -18,7 +18,7 @@ data class PurchaseOrderCreateState(
     val items: List<PurchaseOrderItemUi> = emptyList(),
 
     val isLoading: Boolean = false,
-    val error: String? = null,
+    val fieldErrors: Map<String, String> = emptyMap(),
 
     val isProductDialogOpen: Boolean = false,
     val selectedItemIndex: Int? = null,

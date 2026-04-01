@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.collections.emptyList
 
 class PurchaseOrderCreateViewModel(
     private val container: AppContainer
@@ -107,7 +108,14 @@ class PurchaseOrderCreateViewModel(
                             )
                         },
                         isProductDialogOpen = false,
-                        selectedItemIndex = null
+                        selectedItemIndex = null,
+                        productSearch = "",
+                        selectedCategoryId = null,
+                        selectedSubCategoryId = null,
+                        selectedBrandId = null,
+                        subCategories = emptyList(),
+                        brands = emptyList(),
+                        filteredProducts = emptyList()
                     )
                 }
             }
@@ -191,7 +199,13 @@ class PurchaseOrderCreateViewModel(
                     it.copy(
                         isProductDialogOpen = false,
                         selectedItemIndex = null,
-                        productSearch = ""
+                        productSearch = "",
+                        selectedCategoryId = null,
+                        selectedSubCategoryId = null,
+                        selectedBrandId = null,
+                        subCategories = emptyList(),
+                        brands = emptyList(),
+                        filteredProducts = emptyList()
                     )
                 }
             }
@@ -230,7 +244,6 @@ class PurchaseOrderCreateViewModel(
                 is ValidationResult.Success -> {
                     _state.update {
                         it.copy(
-                            error = null,
                             items = emptyList(),
                             selectedProviderId = null
                         )
@@ -242,9 +255,13 @@ class PurchaseOrderCreateViewModel(
                 }
 
                 is ValidationResult.Failure -> {
+                    val errorsMap = result.errors.associate {
+                        it.field to it.message
+                    }
+
                     _state.update {
                         it.copy(
-                            error = result.errors.firstOrNull()?.message
+                            fieldErrors = errorsMap
                         )
                     }
                 }

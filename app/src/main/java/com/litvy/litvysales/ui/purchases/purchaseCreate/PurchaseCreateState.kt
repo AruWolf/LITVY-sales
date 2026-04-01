@@ -32,6 +32,7 @@ data class PurchaseCreateState(
     val feedbackMessage: String? = null,
     val isSubmitting: Boolean = false,
     val showOrderConflictDialog: Boolean = false,
+    val showOrderDialog: Boolean = false,
 
     val showAddProductDialog: Boolean = false,
     val addProductState: AddProductDialogState = AddProductDialogState()

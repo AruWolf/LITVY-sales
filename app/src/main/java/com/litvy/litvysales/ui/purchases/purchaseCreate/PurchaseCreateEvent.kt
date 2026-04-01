@@ -15,6 +15,8 @@ sealed interface PurchaseCreateEvent {
     data object OpenAddProductDialog : PurchaseCreateEvent
 
     data object CloseAddProductDialog : PurchaseCreateEvent
+    data object OpenOrderDialog : PurchaseCreateEvent
+    data object CloseOrderDialog : PurchaseCreateEvent
 
     data class RemoveItem(
         val itemId: String

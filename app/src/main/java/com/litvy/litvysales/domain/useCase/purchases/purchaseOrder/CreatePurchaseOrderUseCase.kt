@@ -20,7 +20,7 @@ class CreatePurchaseOrderUseCase(
         validator.check(
             purchaseOrder.providerId > 0,
             "providerId",
-            "Debe seleccionarse un proveedor valido"
+            "Debe seleccionar un proveedor"
         )
         validator.add(
             CommonValidators.positive(
@@ -33,6 +33,18 @@ class CreatePurchaseOrderUseCase(
             "items",
             "La orden de compra debe incluir al menos un item"
         )
+
+        items.forEachIndexed { index, item ->
+            validator.check(item.productId > 0,
+            "items[$index].product",
+            "Debe seleccionar un producto"
+            )
+
+            validator.check(item.quantity > 0,
+                "items[$index].quantity",
+                "Ingrese una cantidad valida"
+                )
+        }
 
         val result = validator.build()
         if (result is ValidationResult.Failure && result.errors.isNotEmpty()) {

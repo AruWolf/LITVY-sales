@@ -1,25 +1,42 @@
 package com.litvy.litvysales.ui.purchases.purchaseOrder
 
 import android.content.res.Configuration
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.litvy.litvysales.LitvySalesApplication
@@ -56,8 +73,6 @@ fun PurchaseOrderScreen(
     onEvent: (PurchaseOrderEvent) -> Unit,
     navController: NavController
 ) {
-    val isLandscape =
-        LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -72,43 +87,48 @@ fun PurchaseOrderScreen(
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { padding ->
+    LaunchedEffect(state.selectedOrder?.status) {
+        state.selectedOrder?.let {
+            snackbarHostState.showSnackbar("Orden actualizada")
+        }
+    }
 
-        if (isLandscape) {
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.surface,
+        topBar = {
             Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
 
-                PurchaseOrderList(
-                    state = state,
-                    onEvent = onEvent,
-                    modifier = Modifier.weight(1f)
-                )
-
-                if (state.isDetailOpen && state.selectedOrder != null) {
-                    Dialog(
-                        onDismissRequest = {
-                            onEvent(PurchaseOrderEvent.OnCloseDetail)
-                        }
-                    ) {
-                        PurchaseOrderDetail(
-                            state = state,
-                            onEvent = onEvent
-                        )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
+
+                    Text(
+                        "Órdenes de compra",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                }
+
+                Button(onClick = { onEvent(PurchaseOrderEvent.OnCreateOrder) }) {
+                    Text("Crear")
                 }
             }
-        } else {
+        }
+    ) { padding ->
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(padding)
+                    .background(MaterialTheme.colorScheme.background)
             ) {
                 PurchaseOrderList(
                     state = state,
@@ -120,7 +140,8 @@ fun PurchaseOrderScreen(
                     Dialog(
                         onDismissRequest = {
                             onEvent(PurchaseOrderEvent.OnCloseDetail)
-                        }
+                        },
+                        properties = DialogProperties(usePlatformDefaultWidth = false)
                     ) {
                         PurchaseOrderDetail(
                             state = state,
@@ -131,6 +152,5 @@ fun PurchaseOrderScreen(
             }
         }
 
-    }
 
 }

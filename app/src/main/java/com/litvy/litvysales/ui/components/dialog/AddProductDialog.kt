@@ -1,9 +1,14 @@
 package com.litvy.litvysales.ui.components.dialog
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,6 +19,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,8 +36,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.litvy.litvysales.ui.util.model.CatalogOptionUi
 import com.litvy.litvysales.util.MoneyFormatter
 
@@ -40,44 +50,155 @@ fun AddProductDialog(
     state: AddProductDialogState,
     onEvent: (AddProductDialogEvent) -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = { onEvent(AddProductDialogEvent.Cancel) },
-        title = { Text("Agregar producto") },
-        confirmButton = {
-            Button(onClick = { onEvent(AddProductDialogEvent.Confirm) }) {
-                Text("Agregar")
-            }
-        },
-        dismissButton = {
-            OutlinedButton(onClick = { onEvent(AddProductDialogEvent.Cancel) }) {
-                Text("Cancelar")
-            }
-        },
-        text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                ProductSearchBar(state, onEvent)
-                ProductCatalogFilters(state, onEvent)
+    val isLandscape =
+        LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-                state.searchError?.let {
-                    Text(
-                        text = it,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
+    if (!isLandscape) {
+        AlertDialog(
+            onDismissRequest = { onEvent(AddProductDialogEvent.Cancel) },
+            title = { Text("Agregar producto") },
+            confirmButton = {
+                Button(onClick = { onEvent(AddProductDialogEvent.Confirm) }) {
+                    Text("Agregar")
                 }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { onEvent(AddProductDialogEvent.Cancel) }) {
+                    Text("Cancelar")
+                }
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    ProductSearchBar(state, onEvent)
+                    ProductCatalogFilters(state, onEvent)
 
-                if (state.showResults) {
-                    ProductSearchResults(state, onEvent)
+                    state.searchError?.let {
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
+                    if (state.showResults) {
+                        ProductSearchResults(state, onEvent)
+                    }
+
+                    state.selectedProduct?.let {
+                        ProductSelectionSection(state, onEvent)
+                    }
+                }
+            }
+        )
+    } else {
+        LandscapeAddProductDialog(state, onEvent)
+    }
+}
+
+@Composable
+private fun LandscapeAddProductDialog(
+    state: AddProductDialogState,
+    onEvent: (AddProductDialogEvent) -> Unit
+) {
+    Dialog(
+        onDismissRequest = { onEvent(AddProductDialogEvent.Cancel) },
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.95f)
+                .heightIn(min = 400.dp, max = 650.dp)
+        ) {
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+
+                Text(
+                    text = "Agregar producto",
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                ) {
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+
+                        ProductSearchBar(state, onEvent)
+
+                        ProductCatalogFilters(state, onEvent)
+
+                        state.searchError?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+
+                    if (state.showResults) {
+                        Card(
+                            modifier = Modifier
+                                .weight(1.4f)
+                                .fillMaxHeight(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(8.dp)
+                            ) {
+                                ProductSearchResults(state, onEvent)
+                            }
+                        }
+                    }
                 }
 
                 state.selectedProduct?.let {
+                    Spacer(Modifier.height(8.dp))
+
                     ProductSelectionSection(state, onEvent)
+                }
+
+                Spacer(Modifier.height(6.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                ) {
+                    OutlinedButton(
+                        onClick = { onEvent(AddProductDialogEvent.Cancel) }
+                    ) {
+                        Text("Cancelar")
+                    }
+
+                    Button(
+                        onClick = { onEvent(AddProductDialogEvent.Confirm) }
+                    ) {
+                        Text("Agregar")
+                    }
                 }
             }
         }
-    )
+    }
 }
 
 @Composable

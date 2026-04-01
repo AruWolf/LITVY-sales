@@ -1,30 +1,16 @@
 package com.litvy.litvysales.ui.purchases.purchaseCreate
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.Text
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.*
+import androidx.compose.ui.Alignment
 import com.litvy.litvysales.ui.components.dialog.AddProductDialog
-import com.litvy.litvysales.ui.purchases.purchaseCreate.components.PurchaseActions
-import com.litvy.litvysales.ui.purchases.purchaseCreate.components.PurchaseHeader
-import com.litvy.litvysales.ui.purchases.purchaseCreate.components.PurchaseItemsList
-import com.litvy.litvysales.ui.purchases.purchaseCreate.components.PurchaseOrderConflictDialog
-import com.litvy.litvysales.ui.purchases.purchaseCreate.components.PurchaseOrderSection
-import com.litvy.litvysales.ui.purchases.purchaseCreate.components.PurchaseTotals
+import com.litvy.litvysales.ui.purchases.purchaseCreate.components.*
 
 @Composable
 fun PurchaseCreateScreen(
@@ -53,6 +39,20 @@ fun PurchaseCreateScreen(
     if (state.showOrderConflictDialog) {
         PurchaseOrderConflictDialog(onEvent = onEvent)
     }
+
+    if (state.showOrderDialog){
+        PurchaseOrderDialog(
+            orders = state.purchaseOrders
+                .filter { it.status == "PENDING" || it.status == "SENT" },
+            onSelect = {
+                onEvent(PurchaseCreateEvent.SelectPurchaseOrder(it))
+                onEvent(PurchaseCreateEvent.CloseOrderDialog)
+            },
+            onDismiss = {
+                onEvent(PurchaseCreateEvent.CloseOrderDialog)
+            }
+        )
+    }
 }
 
 @Composable
@@ -66,11 +66,49 @@ private fun PortraitContent(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text("Registrar compra", style = MaterialTheme.typography.headlineSmall)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Registrar compra",
+                style = MaterialTheme.typography.headlineSmall
+            )
+
+            val isLinked = state.selectedPurchaseOrder != null
+
+            Button(
+                onClick = {
+                    if (!isLinked) {
+                        onEvent(PurchaseCreateEvent.OpenOrderDialog)
+                    } else {
+                        onEvent(PurchaseCreateEvent.SelectPurchaseOrder(null))
+                    }
+                },
+                colors = if (isLinked) {
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                } else {
+                    ButtonDefaults.buttonColors()
+                }
+            ) {
+                Text(if (isLinked) "Desvincular" else "Vincular orden")
+            }
+        }
+
+        state.selectedPurchaseOrder?.let { order ->
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Orden vinculada: #${order.id}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
         Spacer(Modifier.height(8.dp))
         PurchaseHeader(state, onEvent)
         Spacer(Modifier.height(16.dp))
-        PurchaseOrderSection(state, onEvent)
         Spacer(Modifier.height(16.dp))
         PurchaseItemsList(
             modifier = Modifier.weight(1f),
@@ -103,33 +141,80 @@ private fun LandscapeContent(
             .fillMaxSize()
             .padding(16.dp)
     ) {
+
         Column(
             modifier = Modifier
-                .weight(0.95f)
+                .weight(1f)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("Registrar compra", style = MaterialTheme.typography.headlineSmall)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    "Registrar compra",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+
+                Button(
+                    onClick = {
+                        if (state.selectedPurchaseOrder == null) {
+                            onEvent(PurchaseCreateEvent.OpenOrderDialog)
+                        } else {
+                            onEvent(PurchaseCreateEvent.SelectPurchaseOrder(null))
+                        }
+                    }
+                ) {
+                    Text(
+                        if (state.selectedPurchaseOrder == null)
+                            "Vincular orden"
+                        else
+                            "Desvincular"
+                    )
+                }
+            }
+
+            state.selectedPurchaseOrder?.let { order ->
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "Orden vinculada: #${order.id}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
             PurchaseHeader(state, onEvent)
-            PurchaseOrderSection(state, onEvent)
+
             PurchaseTotals(state)
-            PurchaseActions(canConfirm = state.canConfirm, onEvent = onEvent, onBack = onBack)
         }
 
         Spacer(Modifier.width(16.dp))
 
-        PurchaseItemsList(
-            modifier = Modifier.weight(1.2f),
-            items = state.items,
-            itemsError = state.itemsError,
-            onAddItem = { onEvent(PurchaseCreateEvent.OpenAddProductDialog) },
-            onRemove = { onEvent(PurchaseCreateEvent.RemoveItem(it)) },
-            onQuantityChange = { itemId, quantity ->
-                onEvent(PurchaseCreateEvent.UpdateQuantity(itemId, quantity))
-            },
-            onUnitPriceChange = { itemId, price ->
-                onEvent(PurchaseCreateEvent.UpdateUnitPrice(itemId, price))
-            }
-        )
+        Column(
+            modifier = Modifier.weight(1.2f)
+        ) {
+
+            PurchaseItemsList(
+                modifier = Modifier.weight(1f),
+                items = state.items,
+                itemsError = state.itemsError,
+                onAddItem = { onEvent(PurchaseCreateEvent.OpenAddProductDialog) },
+                onRemove = { onEvent(PurchaseCreateEvent.RemoveItem(it)) },
+                onQuantityChange = { itemId, quantity ->
+                    onEvent(PurchaseCreateEvent.UpdateQuantity(itemId, quantity))
+                },
+                onUnitPriceChange = { itemId, price ->
+                    onEvent(PurchaseCreateEvent.UpdateUnitPrice(itemId, price))
+                }
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            PurchaseActions(
+                canConfirm = state.canConfirm,
+                onEvent = onEvent,
+                onBack = onBack
+            )
+        }
     }
 }

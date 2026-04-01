@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +29,8 @@ import com.litvy.litvysales.util.MoneyFormatter
 @Composable
 fun PurchaseOrderItemCard(
     item: PurchaseOrderItemUi,
+    errorProduct: String?,
+    errorQuantity: String?,
     onSelectProduct: () -> Unit,
     onQuantityChange: (String) -> Unit,
     onRemove: () -> Unit
@@ -48,6 +51,10 @@ fun PurchaseOrderItemCard(
                         value = item.productName,
                         onValueChange = {},
                         readOnly = true,
+                        isError = errorProduct != null,
+                        supportingText = {
+                            errorProduct?.let { Text(it) }
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Producto") }
                     )
@@ -72,7 +79,13 @@ fun PurchaseOrderItemCard(
                     onValueChange = onQuantityChange,
                     modifier = Modifier.width(80.dp),
                     label = { Text("Cant.") },
-                    singleLine = true
+                    singleLine = true,
+                    isError = errorQuantity != null,
+                    supportingText = {
+                        errorQuantity?.let { Text(it,
+                            style = MaterialTheme.typography.labelSmall,
+                        )}
+                    }
                 )
 
                 Spacer(Modifier.width(8.dp))

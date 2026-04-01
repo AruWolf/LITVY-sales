@@ -94,9 +94,6 @@ class PurchaseOrderViewModel(
                 _state.update { it.copy(search = event.value) }
             }
 
-            is PurchaseOrderEvent.OnStatusChange -> {
-                _state.update { it.copy(selectedStatus = event.status) }
-            }
 
             is PurchaseOrderEvent.OnSelectOrder -> {
                 val order = _state.value.orders.firstOrNull { it.id == event.orderId }
@@ -105,6 +102,18 @@ class PurchaseOrderViewModel(
                         selectedOrder = order,
                         isDetailOpen = true
                     ) }
+            }
+
+            is PurchaseOrderEvent.OnToggleStatus -> {
+                val current = _state.value.selectedStatuses.toMutableSet()
+
+                if (current.contains(event.status)) {
+                    current.remove(event.status)
+                } else {
+                    current.add(event.status)
+                }
+
+                _state.update { it.copy(selectedStatuses = current) }
             }
 
             PurchaseOrderEvent.OnCloseDetail -> _state.update { it.copy(isDetailOpen = false) }
@@ -133,14 +142,6 @@ class PurchaseOrderViewModel(
                 items = items
             )
 
-            _state.update {
-                it.copy(
-                    feedback = if (result is ValidationResult.Success)
-                        "Orden #${order.id} actualizada a ${status.name}"
-                    else
-                        "Error al actualizar"
-                )
-            }
         }
     }
 

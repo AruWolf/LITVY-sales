@@ -5,9 +5,8 @@ import com.litvy.litvysales.ui.util.model.PurchaseOrderUi
 data class PurchaseOrderState(
     val orders: List<PurchaseOrderUi> = emptyList(),
     val selectedOrder: PurchaseOrderUi? = null,
-    val selectedStatus: String = "ALL",
+    val selectedStatuses: Set<String> = setOf("PENDING", "SENT", "RECEIVED", "CANCELLED"),
     val search: String = "",
-    val feedback: String? = null,
     val isLoading: Boolean = false,
 
     val isDetailOpen: Boolean = false
