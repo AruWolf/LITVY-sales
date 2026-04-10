@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface CashSessionRepository {
 
-    suspend fun create(session: CashSession): Long
+    suspend fun create(session: CashSession)
 
     suspend fun update(session: CashSession)
 
@@ -15,4 +15,5 @@ interface CashSessionRepository {
     suspend fun getOpenSessionByRegister(registerId: Int): CashSession?
 
     fun getSessions(filter: CashSessionFilter): Flow<List<CashSession?>>
+
 }

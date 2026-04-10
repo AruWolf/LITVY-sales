@@ -3,10 +3,12 @@ package com.litvy.litvysales.ui
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -65,15 +67,6 @@ fun MainScreen() {
                 )
 
                 NavigationDrawerItem(
-                    label = { Text("Configuración") },
-                    selected = false,
-                    onClick = { },
-                    icon = {
-                        Icon(Icons.Default.Settings, null)
-                    }
-                )
-
-                NavigationDrawerItem(
                     label = { Text("Compras") },
                     selected = false,
                     onClick = {
@@ -83,7 +76,35 @@ fun MainScreen() {
                         }
                     },
                     icon = {
-                        Icon(Icons.Default.Inventory, null)
+                        Icon(Icons.Default.ShoppingCart, null)
+                    }
+                )
+
+                NavigationDrawerItem(
+                    label = { Text("Parámetros del sistema")},
+                    selected = false,
+                    onClick = {
+                        navController.navigate("parameters")
+                        scope.launch {
+                            drawerState.close()
+                        }
+                    },
+                    icon = {
+                        Icon(Icons.Default.Category, null)
+                    }
+                )
+
+                NavigationDrawerItem(
+                    label = { Text("Configuración")},
+                    selected = false,
+                    onClick = {
+                        navController.navigate("")
+                        scope.launch {
+                            drawerState.close()
+                        }
+                    },
+                    icon = {
+                        Icon(Icons.Default.Settings, null)
                     }
                 )
 

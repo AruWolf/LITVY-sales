@@ -353,7 +353,7 @@ private fun ProductSearchResults(
                         style = MaterialTheme.typography.bodySmall
                     )
                     Text(
-                        text = "Compra sugerida: ${MoneyFormatter.formatFromCents(product.purchasePrice)}",
+                        text = "Precio sugerido: ${MoneyFormatter.formatFromCents(product.salePrice ?: product.purchasePrice)}",
                         style = MaterialTheme.typography.bodySmall
                     )
                     Button(

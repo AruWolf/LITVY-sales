@@ -1,6 +1,7 @@
 package com.litvy.litvysales.data.local.dao.util
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -9,13 +10,16 @@ import com.litvy.litvysales.data.local.entity.util.PaymentMethodEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface PaymentMethoDao {
+interface PaymentMethodDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(paymentMethod: PaymentMethodEntity)
 
     @Update
     suspend fun update(paymentMethod: PaymentMethodEntity)
+
+    @Delete
+    suspend fun delete(paymentMethod: PaymentMethodEntity)
 
     @Query("SELECT * FROM paymentMethod WHERE id = :id")
     suspend fun getById(id: Int): PaymentMethodEntity?

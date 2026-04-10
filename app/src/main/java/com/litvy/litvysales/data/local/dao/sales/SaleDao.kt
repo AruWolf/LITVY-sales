@@ -1,5 +1,6 @@
 package com.litvy.litvysales.data.local.dao.sales
 
+import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -10,6 +11,7 @@ import com.litvy.litvysales.data.local.entity.enums.SaleStatus
 import com.litvy.litvysales.data.local.entity.sales.SaleEntity
 import kotlinx.coroutines.flow.Flow
 
+@Dao
 interface SaleDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)

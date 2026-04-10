@@ -6,12 +6,16 @@ import com.litvy.litvysales.data.repository.catalog.BrandRepositoryImpl
 import com.litvy.litvysales.data.repository.catalog.CategoryRepositoryImpl
 import com.litvy.litvysales.data.repository.catalog.ProductRepositoryImpl
 import com.litvy.litvysales.data.repository.catalog.SubCategoryRepositoryImpl
+import com.litvy.litvysales.data.repository.inventory.InventoryRepositoryImpl
 import com.litvy.litvysales.data.repository.inventory.StockBatchRepositoryImpl
 import com.litvy.litvysales.data.repository.inventory.StockMovementRepositoryImpl
 import com.litvy.litvysales.data.repository.purchases.InvoiceTypeRepositoryImpl
 import com.litvy.litvysales.data.repository.purchases.ProviderRepositoryImpl
 import com.litvy.litvysales.data.repository.purchases.PurchaseOrderRepositoryImpl
 import com.litvy.litvysales.data.repository.purchases.PurchaseRepositoryImpl
+import com.litvy.litvysales.data.repository.sales.SaleItemRepositoryImpl
+import com.litvy.litvysales.data.repository.sales.SalePaymentRepositoryImpl
+import com.litvy.litvysales.data.repository.sales.SaleRepositoryImpl
 import com.litvy.litvysales.data.repository.user.RoleRepositoryImpl
 import com.litvy.litvysales.data.repository.user.UserRepositoryImpl
 import com.litvy.litvysales.data.repository.util.PaymentMethodRepositoryImpl
@@ -41,7 +45,12 @@ import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.CreatePurchas
 import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.GetPurchaseOrderItemsUseCase
 import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.GetPurchaseOrdersUseCase
 import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.UpdatePurchaseOrderUseCase
-import com.litvy.litvysales.domain.useCase.sales.GetPaymentMethodsUseCase
+import com.litvy.litvysales.domain.useCase.sales.CreateSaleUseCase
+import com.litvy.litvysales.domain.useCase.sales.ValidateSaleUseCase
+import com.litvy.litvysales.domain.useCase.sales.paymentmethod.CreatePaymentMethodUseCase
+import com.litvy.litvysales.domain.useCase.sales.paymentmethod.DeletePaymentMethodUseCase
+import com.litvy.litvysales.domain.useCase.sales.paymentmethod.GetPaymentMethodsUseCase
+import com.litvy.litvysales.domain.useCase.sales.paymentmethod.UpdatePaymentMethodUseCase
 
 class AppContainer(context: Context) {
 
@@ -63,6 +72,10 @@ class AppContainer(context: Context) {
     val paymentMethodDao = database.paymentMethodDao()
     val userDao = database.userDao()
     val roleDao = database.roleDao()
+    val saleDao = database.saleDao()
+    val inventoryDao = database.inventoryDao()
+    val saleItemDao = database.saleItemDao()
+    val salePaymentDao = database.salePaymentDao()
 
     val categoryRepository = CategoryRepositoryImpl(categoryDao, subCategoryDao)
     val subCategoryRepository = SubCategoryRepositoryImpl(subCategoryDao, brandDao)
@@ -77,6 +90,10 @@ class AppContainer(context: Context) {
     val paymentMethodRepository = PaymentMethodRepositoryImpl(paymentMethodDao)
     val userRepository = UserRepositoryImpl(userDao)
     val roleRepository = RoleRepositoryImpl(roleDao)
+    val saleRepository = SaleRepositoryImpl(saleDao)
+    val inventoryRepository = InventoryRepositoryImpl(inventoryDao)
+    val saleItemRepository = SaleItemRepositoryImpl(saleItemDao)
+    val salePaymentRepository = SalePaymentRepositoryImpl(salePaymentDao)
 
     val getCategoriesUseCase = GetCategoriesUseCase(categoryRepository)
     val getSubCategoriesByCategoryUseCase = GetSubCategoriesByCategoryUseCase(subCategoryRepository)
@@ -99,6 +116,16 @@ class AppContainer(context: Context) {
     val createProductUseCase = CreateProductUseCase(productRepository, brandRepository)
     val createProviderUseCase = CreateProviderUseCase(providerRepository)
     val createPurchaseOrderUseCase = CreatePurchaseOrderUseCase(purchaseOrderRepository)
+    val createPaymentMethodUseCase = CreatePaymentMethodUseCase(paymentMethodRepository)
+    val validateSaleUseCase = ValidateSaleUseCase()
+    val createSaleUseCase = CreateSaleUseCase(
+        saleRepository = saleRepository,
+        inventoryRepository = inventoryRepository,
+        stockMovementRepository = stockMovementRepository,
+        saleItemRepository = saleItemRepository,
+        salePaymentRepository = salePaymentRepository,
+        validateSaleUseCase = validateSaleUseCase
+    )
 
     val updateCategoryUseCase = UpdateCategoryUseCase(categoryRepository)
     val updateSubCategoryUseCase = UpdateSubCategoryUseCase(subCategoryRepository)
@@ -106,10 +133,14 @@ class AppContainer(context: Context) {
     val updateProductUseCase = UpdateProductUseCase(productRepository)
     val updateProviderUseCase = UpdateProviderUseCase(providerRepository)
     val updatePurchaseOrderUseCase = UpdatePurchaseOrderUseCase(purchaseOrderRepository)
+    val updatePaymentMethodUseCase = UpdatePaymentMethodUseCase(paymentMethodRepository)
+
+    val deletePaymentMethodUseCase = DeletePaymentMethodUseCase(paymentMethodRepository)
 
     val registerPurchaseUseCase = RegisterPurchaseUseCase(
         purchaseRepository,
         stockBatchRepository,
         stockMovementRepository
     )
+
 }

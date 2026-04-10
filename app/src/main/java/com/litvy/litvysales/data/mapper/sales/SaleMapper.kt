@@ -129,6 +129,16 @@ Sale
 ========================
 */
 
+fun com.litvy.litvysales.domain.model.enums.SaleStatus.toEntity():
+        com.litvy.litvysales.data.local.entity.enums.SaleStatus {
+    return com.litvy.litvysales.data.local.entity.enums.SaleStatus.valueOf(this.name)
+}
+
+fun com.litvy.litvysales.data.local.entity.enums.SaleStatus.toDomain():
+        com.litvy.litvysales.domain.model.enums.SaleStatus {
+    return com.litvy.litvysales.domain.model.enums.SaleStatus.valueOf(this.name)
+}
+
 fun Sale.toEntity(): SaleEntity =
     SaleEntity(
         id = id,
@@ -137,7 +147,7 @@ fun Sale.toEntity(): SaleEntity =
         customerId = customerId,
         totalDiscountInCents = totalDiscountInCents,
         totalInCents = totalInCents,
-        status = status,
+        status = status.toEntity(),
         cancellationReason = cancellationReason,
         createdAt = createdAt
     )
@@ -150,7 +160,7 @@ fun SaleEntity.toDomain(): Sale =
         customerId = customerId,
         totalDiscountInCents = totalDiscountInCents,
         totalInCents = totalInCents,
-        status = status,
+        status = status.toDomain(),
         cancellationReason = cancellationReason,
         createdAt = createdAt
     )
@@ -167,7 +177,6 @@ fun SaleItem.toEntity(): SaleItemEntity =
         id = id,
         saleId = saleId,
         productId = productId,
-        paymentMethodId = paymentMethodId,
         quantity = quantity,
         unitPriceInCents = unitPriceInCents,
         discountAppliedInCents = discountAppliedInCents,
@@ -180,7 +189,6 @@ fun SaleItemEntity.toDomain(): SaleItem =
         id = id,
         saleId = saleId,
         productId = productId,
-        paymentMethodId = paymentMethodId,
         quantity = quantity,
         unitPriceInCents = unitPriceInCents,
         discountAppliedInCents = discountAppliedInCents,

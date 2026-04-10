@@ -25,7 +25,7 @@ import com.litvy.litvysales.domain.useCase.purchases.provider.GetProvidersWithVi
 import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.GetPurchaseOrderItemsUseCase
 import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.GetPurchaseOrdersUseCase
 import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.UpdatePurchaseOrderUseCase
-import com.litvy.litvysales.domain.useCase.sales.GetPaymentMethodsUseCase
+import com.litvy.litvysales.domain.useCase.sales.paymentmethod.GetPaymentMethodsUseCase
 import com.litvy.litvysales.domain.validation.ValidationResult
 import com.litvy.litvysales.ui.components.dialog.AddProductDialogEvent
 import com.litvy.litvysales.ui.components.dialog.AddProductDialogState

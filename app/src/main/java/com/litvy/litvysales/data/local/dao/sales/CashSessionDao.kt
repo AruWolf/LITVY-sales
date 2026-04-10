@@ -1,5 +1,6 @@
 package com.litvy.litvysales.data.local.dao.sales
 
+import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -9,6 +10,7 @@ import com.litvy.litvysales.data.local.entity.sales.CashSessionEntity
 import com.litvy.litvysales.data.local.entity.enums.CashSessionStatus
 import kotlinx.coroutines.flow.Flow
 
+@Dao
 interface CashSessionDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
@@ -22,6 +24,14 @@ interface CashSessionDao {
 
     @RawQuery(observedEntities = [CashSessionEntity::class])
     fun getByFilter(query: SupportSQLiteQuery): Flow<List<CashSessionEntity>>
+
+    @Query("""
+    SELECT * FROM cashSession
+    WHERE cashRegisterId = :registerId
+    AND closedAt IS NULL
+    LIMIT 1
+""")
+    suspend fun getOpenSessionByRegister(registerId: Int): CashSessionEntity?
 
 }
 

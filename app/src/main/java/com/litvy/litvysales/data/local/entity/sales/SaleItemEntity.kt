@@ -4,7 +4,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.litvy.litvysales.data.local.entity.util.PaymentMethodEntity
 import com.litvy.litvysales.data.local.entity.catalog.ProductEntity
 
 @Entity(
@@ -21,12 +20,6 @@ import com.litvy.litvysales.data.local.entity.catalog.ProductEntity
             parentColumns = ["id"],
             childColumns = ["productId"],
             onDelete = ForeignKey.RESTRICT
-        ),
-        ForeignKey(
-            entity = PaymentMethodEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["paymentMethodId"],
-            onDelete = ForeignKey.RESTRICT
         )
     ],
     indices = [
@@ -40,7 +33,6 @@ data class SaleItemEntity(
     val id: Int = 0,
     val saleId: Int,
     val productId: Int,
-    val paymentMethodId: Int,
     val quantity: Double,
     val unitPriceInCents: Long,
     val discountAppliedInCents: Long = 0,

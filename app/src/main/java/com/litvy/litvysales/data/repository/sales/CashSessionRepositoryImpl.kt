@@ -8,12 +8,13 @@ import com.litvy.litvysales.domain.model.sales.CashSession
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import com.litvy.litvysales.data.mapper.sales.toDomain
+import com.litvy.litvysales.data.mapper.sales.toEntity
 
 class CashSessionRepositoryImpl(
     private val dao: CashSessionDao
 ) : CashSessionRepository {
-    override suspend fun create(session: CashSession): Long {
-        TODO("Not yet implemented")
+    override suspend fun create(session: CashSession) {
+        return dao.insert(session.toEntity())
     }
 
     override suspend fun update(session: CashSession) {
@@ -21,11 +22,11 @@ class CashSessionRepositoryImpl(
     }
 
     override suspend fun getById(id: Int): CashSession? {
-        TODO("Not yet implemented")
+        return dao.getById(id)?.toDomain()
     }
 
     override suspend fun getOpenSessionByRegister(registerId: Int): CashSession? {
-        TODO("Not yet implemented")
+        return dao.getOpenSessionByRegister(registerId)?.toDomain()
     }
 
     override fun getSessions(filter: CashSessionFilter) =

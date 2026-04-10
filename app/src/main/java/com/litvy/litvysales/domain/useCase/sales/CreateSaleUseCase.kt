@@ -3,15 +3,21 @@ package com.litvy.litvysales.domain.useCase.sales
 import com.litvy.litvysales.domain.interfaces.sales.SaleRepository
 import com.litvy.litvysales.domain.interfaces.inventory.InventoryRepository
 import com.litvy.litvysales.domain.interfaces.inventory.StockMovementRepository
+import com.litvy.litvysales.domain.interfaces.sales.SaleItemRepository
+import com.litvy.litvysales.domain.interfaces.sales.SalePaymentRepository
 import com.litvy.litvysales.domain.model.sales.*
 import com.litvy.litvysales.domain.model.inventory.StockMovement
 import com.litvy.litvysales.domain.model.enums.StockMovementType
+import com.litvy.litvysales.domain.validation.ValidationResult
 import kotlinx.coroutines.flow.first
 
 class CreateSaleUseCase(
     private val saleRepository: SaleRepository,
     private val inventoryRepository: InventoryRepository,
-    private val stockMovementRepository: StockMovementRepository
+    private val stockMovementRepository: StockMovementRepository,
+    private val saleItemRepository: SaleItemRepository,
+    private val salePaymentRepository: SalePaymentRepository,
+    private val validateSaleUseCase: ValidateSaleUseCase
 ) {
 
     suspend operator fun invoke(
@@ -20,17 +26,18 @@ class CreateSaleUseCase(
         payments: List<SalePayment>
     ): Long {
 
-        if (items.isEmpty()) {
-            throw IllegalArgumentException("Sale must contain at least one item")
-        }
+        // Validaciones de negocio (UI-friendly)
+        val validation = validateSaleUseCase(sale, items, payments)
 
-        if (payments.isEmpty()) {
-            throw IllegalArgumentException("Sale must contain at least one payment")
+        if (validation is ValidationResult.Failure) {
+            throw IllegalStateException(
+                validation.errors.joinToString { it.message }
+            )
         }
 
         // Validar stock
+        /* TODO: Implementar en versión que incluya control de stock y la opción de desactivarlo
         items.forEach { item ->
-
             val inventory = inventoryRepository
                 .getInventoryByProduct(item.productId)
                 .first()
@@ -39,17 +46,31 @@ class CreateSaleUseCase(
 
             if (stock < item.quantity) {
                 throw IllegalStateException(
-                    "Insufficient stock for product ${item.productId}"
+                    "Stock insuficiente para el producto ${item.productId}"
                 )
             }
-        }
+        }*/
 
-        // Registrar venta
+        // Crear venta
         val saleId = saleRepository.create(sale)
 
-        // Generar movimientos de stock
+        // Guardar items
         items.forEach { item ->
+            saleItemRepository.create(
+                item.copy(saleId = saleId.toInt())
+            )
+        }
 
+        // Guardar pagos
+        payments.forEach { payment ->
+            salePaymentRepository.create(
+                payment.copy(saleId = saleId.toInt())
+            )
+        }
+
+        // Movimientos de stock
+        /*
+        items.forEach { item ->
             val movement = StockMovement(
                 id = 0,
                 productId = item.productId,
@@ -63,7 +84,7 @@ class CreateSaleUseCase(
             )
 
             stockMovementRepository.generateMovement(movement)
-        }
+        }*/
 
         return saleId
     }

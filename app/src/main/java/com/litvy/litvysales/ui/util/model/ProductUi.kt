@@ -10,6 +10,8 @@ data class ProductUi(
 
     val purchasePrice: Long,
 
+    val salePrice: Long? = null,
+
     val categoryId: Int,
 
     val categoryName: String,

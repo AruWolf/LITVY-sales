@@ -19,13 +19,13 @@ interface SaleItemDao{
     suspend fun getById(id: Int): SaleItemEntity?
 
     @Query("SELECT * FROM saleItem WHERE saleId = :saleId")
-    fun getBySale(saleId: Int): Flow<List<SaleEntity?>>
+    fun getBySale(saleId: Int): Flow<List<SaleItemEntity>>
 
     @Query("SELECT * FROM saleItem WHERE productId = :productId")
-    fun getByProduct(productId: Int): Flow<List<SaleEntity?>>
+    fun getByProduct(productId: Int): Flow<List<SaleItemEntity>>
 
     //TODO: Realizar consulta compleja de venta según tipo de pago
-    fun getByPaymentMethod(paymentMethodEntity: PaymentMethodEntity): Flow<List<SaleEntity?>>
+    //fun getByPaymentMethod(paymentMethodEntity: PaymentMethodEntity): Flow<List<SaleEntity?>>
 
 
 }

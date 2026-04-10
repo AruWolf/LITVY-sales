@@ -14,6 +14,10 @@ import com.litvy.litvysales.ui.purchases.purchaseOrder.PurchaseOrderRoute
 import com.litvy.litvysales.ui.purchases.purchaseOrder.create.PurchaseOrderCreateRoute
 import com.litvy.litvysales.ui.purchases.shoppingList.ShoppingListScreen
 import com.litvy.litvysales.ui.purchases.shoppingList.ShoppingListScreenRoute
+import com.litvy.litvysales.ui.sales.SalesRoute
+import com.litvy.litvysales.ui.systemparameters.ParameterScreen
+import com.litvy.litvysales.ui.systemparameters.paymentmethod.PaymentMethodRoute
+import com.litvy.litvysales.ui.systemparameters.paymentmethod.PaymentMethodScreen
 
 @Composable
 fun NavigationHost(
@@ -28,7 +32,7 @@ fun NavigationHost(
     ) {
 
         composable("sales") {
-            SalesScreen()
+            SalesRoute()
         }
 
         composable("catalog") {
@@ -61,6 +65,14 @@ fun NavigationHost(
 
         composable("providers") {
             ProviderRoute(navController)
+        }
+
+        composable("parameters") {
+            ParameterScreen(navController)
+        }
+
+        composable("paymentMethods") {
+            PaymentMethodRoute(navController)
         }
 
     }

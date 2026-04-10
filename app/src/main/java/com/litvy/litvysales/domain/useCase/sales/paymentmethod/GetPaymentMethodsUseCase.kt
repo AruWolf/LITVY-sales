@@ -1,4 +1,4 @@
-package com.litvy.litvysales.domain.useCase.sales
+package com.litvy.litvysales.domain.useCase.sales.paymentmethod
 
 import com.litvy.litvysales.domain.interfaces.sales.PaymentMethodRepository
 import com.litvy.litvysales.domain.model.util.PaymentMethod

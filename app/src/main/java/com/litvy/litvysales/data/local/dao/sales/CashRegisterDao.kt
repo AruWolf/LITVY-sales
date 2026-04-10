@@ -1,5 +1,6 @@
 package com.litvy.litvysales.data.local.dao.sales
 
+import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -8,6 +9,7 @@ import androidx.sqlite.db.SimpleSQLiteQuery
 import com.litvy.litvysales.data.local.entity.sales.CashRegisterEntity
 import kotlinx.coroutines.flow.Flow
 
+@Dao
 interface CashRegisterDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)

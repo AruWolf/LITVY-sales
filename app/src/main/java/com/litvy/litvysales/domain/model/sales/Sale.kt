@@ -1,7 +1,5 @@
 package com.litvy.litvysales.domain.model.sales
 
-import com.litvy.litvysales.data.local.entity.enums.SaleStatus
-
 data class Sale(
     val id: Int = 0,
 
@@ -10,7 +8,7 @@ data class Sale(
     val customerId: Int?,
     val totalDiscountInCents: Long,
     val totalInCents: Long,
-    val status: SaleStatus,
+    val status: com.litvy.litvysales.domain.model.enums.SaleStatus,
     val cancellationReason: String?,
     val createdAt: Long
 )

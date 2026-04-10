@@ -21,9 +21,18 @@ import com.litvy.litvysales.data.local.dao.purchases.PurchaseDao
 import com.litvy.litvysales.data.local.dao.purchases.PurchaseItemDao
 import com.litvy.litvysales.data.local.dao.purchases.PurchaseOrderDao
 import com.litvy.litvysales.data.local.dao.purchases.PurchaseOrderItemDao
+import com.litvy.litvysales.data.local.dao.sales.CashMovementDao
+import com.litvy.litvysales.data.local.dao.sales.CashRegisterDao
+import com.litvy.litvysales.data.local.dao.sales.CashSessionDao
+import com.litvy.litvysales.data.local.dao.sales.CustomerDao
+import com.litvy.litvysales.data.local.dao.sales.SaleDao
+import com.litvy.litvysales.data.local.dao.sales.SaleItemDao
+import com.litvy.litvysales.data.local.dao.sales.SalePaymentDao
+import com.litvy.litvysales.data.local.dao.sales.SalePromotionDao
+import com.litvy.litvysales.data.local.dao.sales.TaxItemDao
 import com.litvy.litvysales.data.local.dao.user.RoleDao
 import com.litvy.litvysales.data.local.dao.user.UserDao
-import com.litvy.litvysales.data.local.dao.util.PaymentMethoDao
+import com.litvy.litvysales.data.local.dao.util.PaymentMethodDao
 import com.litvy.litvysales.data.local.entity.catalog.BrandEntity
 import com.litvy.litvysales.data.local.entity.catalog.CategoryEntity
 import com.litvy.litvysales.data.local.entity.catalog.ProductEntity
@@ -90,7 +99,7 @@ import com.litvy.litvysales.data.local.entity.util.PaymentMethodEntity
         SalePromotionEntity::class,
         InvoiceTypeEntity::class
     ],
-    version = 4
+    version = 5
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -195,6 +204,51 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+
+                // 1. Crear nueva tabla sin paymentMethodId
+                database.execSQL("""
+            CREATE TABLE IF NOT EXISTS `saleItem_new` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `saleId` INTEGER NOT NULL,
+                `productId` INTEGER NOT NULL,
+                `quantity` REAL NOT NULL,
+                `unitPriceInCents` INTEGER NOT NULL,
+                `discountAppliedInCents` INTEGER NOT NULL,
+                `originalUnitPriceInCents` INTEGER NOT NULL,
+                `totalInCents` INTEGER NOT NULL,
+                FOREIGN KEY(`saleId`) REFERENCES `sale`(`id`) ON DELETE CASCADE,
+                FOREIGN KEY(`productId`) REFERENCES `product`(`id`) ON DELETE RESTRICT
+            )
+        """.trimIndent())
+
+                // 2. Copiar datos (sin paymentMethodId)
+                database.execSQL("""
+            INSERT INTO saleItem_new (
+                id, saleId, productId, quantity,
+                unitPriceInCents, discountAppliedInCents,
+                originalUnitPriceInCents, totalInCents
+            )
+            SELECT
+                id, saleId, productId, quantity,
+                unitPriceInCents, discountAppliedInCents,
+                originalUnitPriceInCents, totalInCents
+            FROM saleItem
+        """.trimIndent())
+
+                // 3. Borrar vieja
+                database.execSQL("DROP TABLE saleItem")
+
+                // 4. Renombrar
+                database.execSQL("ALTER TABLE saleItem_new RENAME TO saleItem")
+
+                // 5. Índices
+                database.execSQL("CREATE INDEX index_saleItem_saleId ON saleItem(saleId)")
+                database.execSQL("CREATE INDEX index_saleItem_productId ON saleItem(productId)")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -202,7 +256,12 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "litvy_sales_db"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(
+                        MIGRATION_1_2,
+                        MIGRATION_2_3,
+                        MIGRATION_3_4,
+                        MIGRATION_4_5
+                    )
                     .build()
                 INSTANCE = instance
                 instance
@@ -226,5 +285,14 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun purchaseItemDao(): PurchaseItemDao
     abstract fun purchaseOrderDao(): PurchaseOrderDao
     abstract fun purchaseOrderItemDao(): PurchaseOrderItemDao
-    abstract fun paymentMethodDao(): PaymentMethoDao
+    abstract fun paymentMethodDao(): PaymentMethodDao
+    abstract fun saleDao(): SaleDao
+    abstract fun cashMovementDao(): CashMovementDao
+    abstract fun cashRegisterDao(): CashRegisterDao
+    abstract fun cashSessionDao(): CashSessionDao
+    abstract fun customerDao(): CustomerDao
+    abstract fun saleItemDao(): SaleItemDao
+    abstract fun salePaymentDao(): SalePaymentDao
+    abstract fun salePromotionDao(): SalePromotionDao
+    abstract fun taxItemDao(): TaxItemDao
 }
