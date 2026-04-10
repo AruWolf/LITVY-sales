@@ -6,7 +6,6 @@ import com.litvy.litvysales.domain.useCase.InitializeAppUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import com.litvy.litvysales.domain.interfaces.user.*
 
 class LitvySalesApplication : Application() {
 
@@ -20,8 +19,10 @@ class LitvySalesApplication : Application() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val useCase = InitializeAppUseCase(
-                    container.userRepository,
-                    container.roleRepository
+                    userRepository = container.userRepository,
+                    roleRepository = container.roleRepository,
+                    cashRegisterRepository = container.cashRegisterRepository,
+                    cashSessionRepository = container.cashSessionRepository
                 )
 
                 useCase()

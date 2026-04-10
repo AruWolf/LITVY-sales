@@ -1,31 +1,37 @@
 package com.litvy.litvysales.domain.useCase
 
+import com.litvy.litvysales.data.local.entity.enums.CashSessionStatus
+import com.litvy.litvysales.domain.interfaces.sales.CashRegisterRepository
+import com.litvy.litvysales.domain.interfaces.sales.CashSessionRepository
 import com.litvy.litvysales.domain.interfaces.user.RoleRepository
 import com.litvy.litvysales.domain.interfaces.user.UserRepository
+import com.litvy.litvysales.domain.model.sales.CashRegister
+import com.litvy.litvysales.domain.model.sales.CashSession
 import com.litvy.litvysales.domain.model.user.Role
 import com.litvy.litvysales.domain.model.user.User
 
 class InitializeAppUseCase(
-    private val repository: UserRepository,
-    private val roleRepository: RoleRepository
+    private val userRepository: UserRepository,
+    private val roleRepository: RoleRepository,
+    private val cashRegisterRepository: CashRegisterRepository,
+    private val cashSessionRepository: CashSessionRepository
 ) {
     suspend operator fun invoke() {
-        val user = repository.getById(1)
-        val role = roleRepository.getById(1)
+        val now = System.currentTimeMillis()
 
-        if (role == null){
+        if (roleRepository.getById(DEFAULT_ROLE_ID) == null) {
             roleRepository.insert(
                 Role(
-                    id = 1,
+                    id = DEFAULT_ROLE_ID,
                     name = "Admin"
                 )
             )
         }
 
-        if (user == null) {
-            repository.create(
+        if (userRepository.getById(DEFAULT_USER_ID) == null) {
+            userRepository.create(
                 User(
-                    id = 1,
+                    id = DEFAULT_USER_ID,
                     name = "Admin",
                     lastname = "System",
                     dni = "12345678",
@@ -33,13 +39,49 @@ class InitializeAppUseCase(
                     email = "admin@local",
                     birthDate = null,
                     address = "San Martin 123",
-                    passwordHash = "Admin", // después lo mejorás
-                    roleId = 1,
+                    passwordHash = "Admin",
+                    roleId = DEFAULT_ROLE_ID,
                     active = true,
-                    createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis()
+                    createdAt = now,
+                    updatedAt = now
                 )
             )
         }
+
+        if (cashRegisterRepository.getById(DEFAULT_CASH_REGISTER_ID) == null) {
+            cashRegisterRepository.create(
+                CashRegister(
+                    id = DEFAULT_CASH_REGISTER_ID,
+                    name = "Caja principal",
+                    location = "Local principal",
+                    active = true
+                )
+            )
+        }
+
+        if (cashSessionRepository.getById(DEFAULT_CASH_SESSION_ID) == null) {
+            cashSessionRepository.create(
+                CashSession(
+                    id = DEFAULT_CASH_SESSION_ID,
+                    cashRegisterId = DEFAULT_CASH_REGISTER_ID,
+                    startedAt = now,
+                    closedAt = null,
+                    openingAmountInCents = 0L,
+                    closingAmountInCents = null,
+                    expectedAmountInCents = null,
+                    differenceInCents = null,
+                    status = CashSessionStatus.OPEN,
+                    openedBy = DEFAULT_USER_ID,
+                    closedBy = null
+                )
+            )
+        }
+    }
+
+    private companion object {
+        const val DEFAULT_ROLE_ID = 1
+        const val DEFAULT_USER_ID = 1
+        const val DEFAULT_CASH_REGISTER_ID = 1
+        const val DEFAULT_CASH_SESSION_ID = 1
     }
 }

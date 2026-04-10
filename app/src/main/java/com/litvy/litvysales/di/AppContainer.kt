@@ -13,6 +13,8 @@ import com.litvy.litvysales.data.repository.purchases.InvoiceTypeRepositoryImpl
 import com.litvy.litvysales.data.repository.purchases.ProviderRepositoryImpl
 import com.litvy.litvysales.data.repository.purchases.PurchaseOrderRepositoryImpl
 import com.litvy.litvysales.data.repository.purchases.PurchaseRepositoryImpl
+import com.litvy.litvysales.data.repository.sales.CashRegisterRepositoryImpl
+import com.litvy.litvysales.data.repository.sales.CashSessionRepositoryImpl
 import com.litvy.litvysales.data.repository.sales.SaleItemRepositoryImpl
 import com.litvy.litvysales.data.repository.sales.SalePaymentRepositoryImpl
 import com.litvy.litvysales.data.repository.sales.SaleRepositoryImpl
@@ -73,6 +75,8 @@ class AppContainer(context: Context) {
     val userDao = database.userDao()
     val roleDao = database.roleDao()
     val saleDao = database.saleDao()
+    val cashRegisterDao = database.cashRegisterDao()
+    val cashSessionDao = database.cashSessionDao()
     val inventoryDao = database.inventoryDao()
     val saleItemDao = database.saleItemDao()
     val salePaymentDao = database.salePaymentDao()
@@ -91,6 +95,8 @@ class AppContainer(context: Context) {
     val userRepository = UserRepositoryImpl(userDao)
     val roleRepository = RoleRepositoryImpl(roleDao)
     val saleRepository = SaleRepositoryImpl(saleDao)
+    val cashRegisterRepository = CashRegisterRepositoryImpl(cashRegisterDao)
+    val cashSessionRepository = CashSessionRepositoryImpl(cashSessionDao)
     val inventoryRepository = InventoryRepositoryImpl(inventoryDao)
     val saleItemRepository = SaleItemRepositoryImpl(saleItemDao)
     val salePaymentRepository = SalePaymentRepositoryImpl(salePaymentDao)
