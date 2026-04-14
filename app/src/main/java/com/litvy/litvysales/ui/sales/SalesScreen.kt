@@ -42,7 +42,7 @@ fun SalesRoute() {
 
     val factory = remember {
         SalesViewModelFactory(
-            createSaleUseCase = container.createSaleUseCase,
+            createSaleUseCase = container.createSaleWithCashSessionUseCase,
             validateSaleUseCase = container.validateSaleUseCase,
             getPaymentMethodsUseCase = container.getPaymentMethodsUseCase,
             getProductsUseCase = container.getActiveProductsUseCase,

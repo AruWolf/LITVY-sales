@@ -11,6 +11,8 @@ interface SalePaymentRepository {
 
     suspend fun getById(salePaymentId: Int): SalePayment?
 
+    fun getBySale(saleId: Int): Flow<List<SalePayment>>
+
     fun getAll(): Flow<List<SalePayment>>
 
 }

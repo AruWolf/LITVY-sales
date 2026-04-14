@@ -21,6 +21,10 @@ class SalePaymentRepositoryImpl(private val dao: SalePaymentDao): SalePaymentRep
         return dao.getById(salePaymentId)?.toDomain()
     }
 
+    override fun getBySale(saleId: Int): Flow<List<SalePayment>> {
+        return dao.getBySale(saleId).map { list -> list.map { it.toDomain() } }
+    }
+
     override fun getAll(): Flow<List<SalePayment>> {
         return dao.getAll().map {
             list -> list.map { it.toDomain()}

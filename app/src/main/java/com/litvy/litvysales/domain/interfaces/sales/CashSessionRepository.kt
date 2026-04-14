@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface CashSessionRepository {
 
-    suspend fun create(session: CashSession)
+    suspend fun create(session: CashSession): Long
 
     suspend fun update(session: CashSession)
 

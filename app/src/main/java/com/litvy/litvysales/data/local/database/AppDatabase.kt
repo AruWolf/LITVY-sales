@@ -24,6 +24,7 @@ import com.litvy.litvysales.data.local.dao.purchases.PurchaseOrderItemDao
 import com.litvy.litvysales.data.local.dao.sales.CashMovementDao
 import com.litvy.litvysales.data.local.dao.sales.CashRegisterDao
 import com.litvy.litvysales.data.local.dao.sales.CashSessionDao
+import com.litvy.litvysales.data.local.dao.sales.CashSessionScheduleDao
 import com.litvy.litvysales.data.local.dao.sales.CustomerDao
 import com.litvy.litvysales.data.local.dao.sales.SaleDao
 import com.litvy.litvysales.data.local.dao.sales.SaleItemDao
@@ -55,6 +56,7 @@ import com.litvy.litvysales.data.local.entity.purchases.PurchaseOrderItemEntity
 import com.litvy.litvysales.data.local.entity.sales.CashMovementEntity
 import com.litvy.litvysales.data.local.entity.sales.CashRegisterEntity
 import com.litvy.litvysales.data.local.entity.sales.CashSessionEntity
+import com.litvy.litvysales.data.local.entity.sales.CashSessionScheduleEntity
 import com.litvy.litvysales.data.local.entity.sales.CustomerEntity
 import com.litvy.litvysales.data.local.entity.sales.SaleEntity
 import com.litvy.litvysales.data.local.entity.sales.SaleItemEntity
@@ -81,6 +83,7 @@ import com.litvy.litvysales.data.local.entity.util.PaymentMethodEntity
         ProductTaxEntity::class,
         CashRegisterEntity::class,
         CashSessionEntity::class,
+        CashSessionScheduleEntity::class,
         CashMovementEntity::class,
         SaleEntity::class,
         SaleItemEntity::class,
@@ -99,7 +102,7 @@ import com.litvy.litvysales.data.local.entity.util.PaymentMethodEntity
         SalePromotionEntity::class,
         InvoiceTypeEntity::class
     ],
-    version = 5
+    version = 7
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -249,6 +252,35 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "ALTER TABLE `cashSession` ADD COLUMN `differenceJustification` TEXT"
+                )
+
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `cashSessionSchedule` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `dayOfWeek` INTEGER NOT NULL,
+                        `openMinuteOfDay` INTEGER NOT NULL,
+                        `closeMinuteOfDay` INTEGER NOT NULL,
+                        `graceMinutes` INTEGER NOT NULL,
+                        `active` INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "ALTER TABLE `cashSessionSchedule` ADD COLUMN `title` TEXT"
+                )
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -260,7 +292,9 @@ abstract class AppDatabase : RoomDatabase() {
                         MIGRATION_1_2,
                         MIGRATION_2_3,
                         MIGRATION_3_4,
-                        MIGRATION_4_5
+                        MIGRATION_4_5,
+                        MIGRATION_5_6,
+                        MIGRATION_6_7
                     )
                     .build()
                 INSTANCE = instance
@@ -290,6 +324,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun cashMovementDao(): CashMovementDao
     abstract fun cashRegisterDao(): CashRegisterDao
     abstract fun cashSessionDao(): CashSessionDao
+    abstract fun cashSessionScheduleDao(): CashSessionScheduleDao
     abstract fun customerDao(): CustomerDao
     abstract fun saleItemDao(): SaleItemDao
     abstract fun salePaymentDao(): SalePaymentDao

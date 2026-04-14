@@ -1,6 +1,6 @@
 package com.litvy.litvysales.domain.model.sales
 
-import com.litvy.litvysales.data.local.entity.enums.CashSessionStatus
+import com.litvy.litvysales.domain.model.enums.CashSessionStatus
 
 data class CashSession(
     val id: Int = 0,
@@ -12,6 +12,7 @@ data class CashSession(
     val closingAmountInCents: Long?,
     val expectedAmountInCents: Long?,
     val differenceInCents: Long?,
+    val differenceJustification: String?,
 
     val status: CashSessionStatus,
     val openedBy: Int,

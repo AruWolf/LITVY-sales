@@ -1,12 +1,11 @@
 package com.litvy.litvysales.domain.useCase
 
-import com.litvy.litvysales.data.local.entity.enums.CashSessionStatus
 import com.litvy.litvysales.domain.interfaces.sales.CashRegisterRepository
 import com.litvy.litvysales.domain.interfaces.sales.CashSessionRepository
 import com.litvy.litvysales.domain.interfaces.user.RoleRepository
 import com.litvy.litvysales.domain.interfaces.user.UserRepository
+import com.litvy.litvysales.domain.model.enums.CashSessionStatus
 import com.litvy.litvysales.domain.model.sales.CashRegister
-import com.litvy.litvysales.domain.model.sales.CashSession
 import com.litvy.litvysales.domain.model.user.Role
 import com.litvy.litvysales.domain.model.user.User
 
@@ -59,29 +58,12 @@ class InitializeAppUseCase(
             )
         }
 
-        if (cashSessionRepository.getById(DEFAULT_CASH_SESSION_ID) == null) {
-            cashSessionRepository.create(
-                CashSession(
-                    id = DEFAULT_CASH_SESSION_ID,
-                    cashRegisterId = DEFAULT_CASH_REGISTER_ID,
-                    startedAt = now,
-                    closedAt = null,
-                    openingAmountInCents = 0L,
-                    closingAmountInCents = null,
-                    expectedAmountInCents = null,
-                    differenceInCents = null,
-                    status = CashSessionStatus.OPEN,
-                    openedBy = DEFAULT_USER_ID,
-                    closedBy = null
-                )
-            )
-        }
+        // No se inicializa una sesión abierta fija para no ocultar estados inválidos.
     }
 
     private companion object {
         const val DEFAULT_ROLE_ID = 1
         const val DEFAULT_USER_ID = 1
         const val DEFAULT_CASH_REGISTER_ID = 1
-        const val DEFAULT_CASH_SESSION_ID = 1
     }
 }

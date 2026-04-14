@@ -5,16 +5,19 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RawQuery
+import androidx.room.Update
 import androidx.sqlite.db.SupportSQLiteQuery
 import com.litvy.litvysales.data.local.entity.sales.CashSessionEntity
-import com.litvy.litvysales.data.local.entity.enums.CashSessionStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CashSessionDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(cashSession: CashSessionEntity)
+    suspend fun insert(cashSession: CashSessionEntity): Long
+
+    @Update
+    suspend fun update(cashSession: CashSessionEntity)
 
     @Query("SELECT * FROM cashSession WHERE id = :id")
     suspend fun getById(id: Int): CashSessionEntity?

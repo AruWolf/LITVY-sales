@@ -14,7 +14,9 @@ import com.litvy.litvysales.data.repository.purchases.ProviderRepositoryImpl
 import com.litvy.litvysales.data.repository.purchases.PurchaseOrderRepositoryImpl
 import com.litvy.litvysales.data.repository.purchases.PurchaseRepositoryImpl
 import com.litvy.litvysales.data.repository.sales.CashRegisterRepositoryImpl
+import com.litvy.litvysales.data.repository.sales.CashMovementRepositoryImpl
 import com.litvy.litvysales.data.repository.sales.CashSessionRepositoryImpl
+import com.litvy.litvysales.data.repository.sales.CashSessionScheduleRepositoryImpl
 import com.litvy.litvysales.data.repository.sales.SaleItemRepositoryImpl
 import com.litvy.litvysales.data.repository.sales.SalePaymentRepositoryImpl
 import com.litvy.litvysales.data.repository.sales.SaleRepositoryImpl
@@ -29,6 +31,7 @@ import com.litvy.litvysales.domain.useCase.catalog.category.GetCategoriesUseCase
 import com.litvy.litvysales.domain.useCase.catalog.category.UpdateCategoryUseCase
 import com.litvy.litvysales.domain.useCase.catalog.product.CreateProductUseCase
 import com.litvy.litvysales.domain.useCase.catalog.product.GetActiveProductsUseCase
+import com.litvy.litvysales.domain.useCase.catalog.product.GetProductByIdUseCase
 import com.litvy.litvysales.domain.useCase.catalog.product.GetActiveProductsWithBrandUseCase
 import com.litvy.litvysales.domain.useCase.catalog.product.GetProductByBrandUseCase
 import com.litvy.litvysales.domain.useCase.catalog.product.SearchProductsUseCase
@@ -48,7 +51,22 @@ import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.GetPurchaseOr
 import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.GetPurchaseOrdersUseCase
 import com.litvy.litvysales.domain.useCase.purchases.purchaseOrder.UpdatePurchaseOrderUseCase
 import com.litvy.litvysales.domain.useCase.sales.CreateSaleUseCase
+import com.litvy.litvysales.domain.useCase.sales.CreateSaleWithCashSessionUseCase
+import com.litvy.litvysales.domain.useCase.sales.GetSaleDetailUseCase
 import com.litvy.litvysales.domain.useCase.sales.ValidateSaleUseCase
+import com.litvy.litvysales.domain.useCase.sales.cashSession.CloseCashSessionUseCase
+import com.litvy.litvysales.domain.useCase.sales.cashSession.DeleteCashSessionScheduleUseCase
+import com.litvy.litvysales.domain.useCase.sales.cashSession.GetCashSessionByIdUseCase
+import com.litvy.litvysales.domain.useCase.sales.cashSession.GetCashSessionDetailUseCase
+import com.litvy.litvysales.domain.useCase.sales.cashSession.GetCashSessionSchedulesUseCase
+import com.litvy.litvysales.domain.useCase.sales.cashSession.GetCashSessionsByOpeningDateUseCase
+import com.litvy.litvysales.domain.useCase.sales.cashSession.GetOpenCashSessionUseCase
+import com.litvy.litvysales.domain.useCase.sales.cashSession.GetOrCreateOpenCashSessionUseCase
+import com.litvy.litvysales.domain.useCase.sales.cashSession.OpenCashSessionUseCase
+import com.litvy.litvysales.domain.useCase.sales.cashSession.RegisterCashMovementUseCase
+import com.litvy.litvysales.domain.useCase.sales.cashSession.SaveCashSessionScheduleUseCase
+import com.litvy.litvysales.domain.useCase.sales.cashSession.UpdateCashSessionDifferenceJustificationUseCase
+import com.litvy.litvysales.domain.useCase.sales.cashSession.UpdateCashSessionUseCase
 import com.litvy.litvysales.domain.useCase.sales.paymentmethod.CreatePaymentMethodUseCase
 import com.litvy.litvysales.domain.useCase.sales.paymentmethod.DeletePaymentMethodUseCase
 import com.litvy.litvysales.domain.useCase.sales.paymentmethod.GetPaymentMethodsUseCase
@@ -77,6 +95,8 @@ class AppContainer(context: Context) {
     val saleDao = database.saleDao()
     val cashRegisterDao = database.cashRegisterDao()
     val cashSessionDao = database.cashSessionDao()
+    val cashSessionScheduleDao = database.cashSessionScheduleDao()
+    val cashMovementDao = database.cashMovementDao()
     val inventoryDao = database.inventoryDao()
     val saleItemDao = database.saleItemDao()
     val salePaymentDao = database.salePaymentDao()
@@ -97,6 +117,8 @@ class AppContainer(context: Context) {
     val saleRepository = SaleRepositoryImpl(saleDao)
     val cashRegisterRepository = CashRegisterRepositoryImpl(cashRegisterDao)
     val cashSessionRepository = CashSessionRepositoryImpl(cashSessionDao)
+    val cashSessionScheduleRepository = CashSessionScheduleRepositoryImpl(cashSessionScheduleDao)
+    val cashMovementRepository = CashMovementRepositoryImpl(cashMovementDao)
     val inventoryRepository = InventoryRepositoryImpl(inventoryDao)
     val saleItemRepository = SaleItemRepositoryImpl(saleItemDao)
     val salePaymentRepository = SalePaymentRepositoryImpl(salePaymentDao)
@@ -105,6 +127,7 @@ class AppContainer(context: Context) {
     val getSubCategoriesByCategoryUseCase = GetSubCategoriesByCategoryUseCase(subCategoryRepository)
     val getBrandBySubCategoryUseCase = GetBrandBySubCategoryUseCase(brandRepository)
     val getProductByBrandUseCase = GetProductByBrandUseCase(productRepository)
+    val getProductByIdUseCase = GetProductByIdUseCase(productRepository)
     val getActiveProductsWithBrandUseCase = GetActiveProductsWithBrandUseCase(productRepository)
     val getActiveProductsUseCase = GetActiveProductsUseCase(productRepository)
     val searchProductsUseCase = SearchProductsUseCase(productRepository)
@@ -115,6 +138,45 @@ class AppContainer(context: Context) {
     val getPurchasesUseCase = GetPurchasesUseCase(purchaseRepository)
     val getPurchaseOrdersUseCase = GetPurchaseOrdersUseCase(purchaseOrderRepository)
     val getPurchaseOrderItemsUseCase = GetPurchaseOrderItemsUseCase(purchaseOrderRepository)
+    val getOpenCashSessionUseCase = GetOpenCashSessionUseCase(cashSessionRepository)
+    val getCashSessionUseCase = com.litvy.litvysales.domain.useCase.sales.cashSession.GetCashSessionUseCase(cashSessionRepository)
+    val getCashSessionByIdUseCase = GetCashSessionByIdUseCase(cashSessionRepository)
+    val updateCashSessionUseCase = UpdateCashSessionUseCase(cashSessionRepository)
+    val openCashSessionUseCase = OpenCashSessionUseCase(cashSessionRepository)
+    val getCashSessionSchedulesUseCase = GetCashSessionSchedulesUseCase(cashSessionScheduleRepository)
+    val saveCashSessionScheduleUseCase = SaveCashSessionScheduleUseCase(cashSessionScheduleRepository)
+    val deleteCashSessionScheduleUseCase = DeleteCashSessionScheduleUseCase(cashSessionScheduleRepository)
+    val getOrCreateOpenCashSessionUseCase = GetOrCreateOpenCashSessionUseCase(
+        getOpenCashSessionUseCase = getOpenCashSessionUseCase,
+        openCashSessionUseCase = openCashSessionUseCase,
+        scheduleRepository = cashSessionScheduleRepository
+    )
+    val getCashSessionsByOpeningDateUseCase = GetCashSessionsByOpeningDateUseCase(
+        cashSessionRepository = cashSessionRepository,
+        saleRepository = saleRepository
+    )
+    val getCashSessionDetailUseCase = GetCashSessionDetailUseCase(
+        cashSessionRepository = cashSessionRepository,
+        cashMovementRepository = cashMovementRepository,
+        saleRepository = saleRepository,
+        saleItemRepository = saleItemRepository
+    )
+    val closeCashSessionUseCase = CloseCashSessionUseCase(
+        getCashSessionDetailUseCase = getCashSessionDetailUseCase,
+        getCashSessionByIdUseCase = getCashSessionByIdUseCase,
+        updateCashSessionUseCase = updateCashSessionUseCase
+    )
+    val registerCashMovementUseCase = RegisterCashMovementUseCase(cashMovementRepository)
+    val updateCashSessionDifferenceJustificationUseCase = UpdateCashSessionDifferenceJustificationUseCase(
+        getCashSessionByIdUseCase = getCashSessionByIdUseCase,
+        updateCashSessionUseCase = updateCashSessionUseCase
+    )
+    val getSaleDetailUseCase = GetSaleDetailUseCase(
+        saleRepository = saleRepository,
+        saleItemRepository = saleItemRepository,
+        salePaymentRepository = salePaymentRepository,
+        getProductByIdUseCase = getProductByIdUseCase
+    )
 
     val createCategoryUseCase = CreateCategoryUseCase(categoryRepository)
     val createSubCategoryUseCase = CreateSubCategoryUseCase(subCategoryRepository, categoryRepository)
@@ -131,6 +193,10 @@ class AppContainer(context: Context) {
         saleItemRepository = saleItemRepository,
         salePaymentRepository = salePaymentRepository,
         validateSaleUseCase = validateSaleUseCase
+    )
+    val createSaleWithCashSessionUseCase = CreateSaleWithCashSessionUseCase(
+        getOrCreateOpenCashSessionUseCase = getOrCreateOpenCashSessionUseCase,
+        createSaleUseCase = createSaleUseCase
     )
 
     val updateCategoryUseCase = UpdateCategoryUseCase(categoryRepository)

@@ -15,6 +15,9 @@ interface SalePaymentDao {
     @Query("SELECT * FROM salePayment WHERE id = :id")
     suspend fun getById(id: Int): SalePaymentEntity?
 
+    @Query("SELECT * FROM salePayment WHERE saleId = :saleId")
+    fun getBySale(saleId: Int): Flow<List<SalePaymentEntity>>
+
     @Query("SELECT * FROM salePayment")
     fun getAll(): Flow<List<SalePaymentEntity>>
 

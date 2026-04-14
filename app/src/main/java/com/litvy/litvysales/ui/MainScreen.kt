@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -49,6 +50,20 @@ fun MainScreen() {
                     },
                     icon = {
                         Icon(Icons.Default.PointOfSale, null)
+                    }
+                )
+
+                NavigationDrawerItem(
+                    label = { Text("Caja") },
+                    selected = false,
+                    onClick = {
+                        navController.navigate("cashSessions")
+                        scope.launch {
+                            drawerState.close()
+                        }
+                    },
+                    icon = {
+                        Icon(Icons.Default.Wallet, null)
                     }
                 )
 

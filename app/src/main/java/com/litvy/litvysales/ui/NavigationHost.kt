@@ -2,10 +2,15 @@ package com.litvy.litvysales.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
+import androidx.navigation.navArgument
 import com.litvy.litvysales.ui.catalog.CatalogScreen
-import com.litvy.litvysales.ui.sales.SalesScreen
+import com.litvy.litvysales.ui.cashsession.CashSessionDetailRoute
+import com.litvy.litvysales.ui.cashsession.CashSessionHomeScreen
+import com.litvy.litvysales.ui.cashsession.CashSessionListRoute
+import com.litvy.litvysales.ui.cashsession.CashSessionSettingsRoute
 import com.litvy.litvysales.ui.purchases.PurchaseScreen
 import com.litvy.litvysales.ui.purchases.purchaseCreate.PurchaseCreateRoute
 import com.litvy.litvysales.ui.purchases.provider.ProviderRoute
@@ -33,6 +38,26 @@ fun NavigationHost(
 
         composable("sales") {
             SalesRoute()
+        }
+
+        composable("cashSessions") {
+            CashSessionHomeScreen(navController)
+        }
+
+        composable("cashSessions/list") {
+            CashSessionListRoute(navController)
+        }
+
+        composable("cashSessions/settings") {
+            CashSessionSettingsRoute(navController)
+        }
+
+        composable(
+            route = "cashSessions/detail/{sessionId}",
+            arguments = listOf(navArgument("sessionId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val sessionId = backStackEntry.arguments?.getInt("sessionId") ?: return@composable
+            CashSessionDetailRoute(navController, sessionId)
         }
 
         composable("catalog") {

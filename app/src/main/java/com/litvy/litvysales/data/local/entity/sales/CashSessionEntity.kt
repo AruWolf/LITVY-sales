@@ -36,6 +36,7 @@ data class CashSessionEntity(
     val closingAmountInCents: Long?,
     val expectedAmountInCents: Long?,
     val differenceInCents: Long?,
+    val differenceJustification: String?,
 
     val status: CashSessionStatus,
     val openedBy: Int,

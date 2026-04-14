@@ -13,12 +13,12 @@ import com.litvy.litvysales.data.mapper.sales.toEntity
 class CashSessionRepositoryImpl(
     private val dao: CashSessionDao
 ) : CashSessionRepository {
-    override suspend fun create(session: CashSession) {
+    override suspend fun create(session: CashSession): Long {
         return dao.insert(session.toEntity())
     }
 
     override suspend fun update(session: CashSession) {
-        TODO("Not yet implemented")
+        dao.update(session.toEntity())
     }
 
     override suspend fun getById(id: Int): CashSession? {

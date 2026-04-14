@@ -61,6 +61,16 @@ CashSession
 ========================
 */
 
+fun com.litvy.litvysales.domain.model.enums.CashSessionStatus.toEntity():
+        com.litvy.litvysales.data.local.entity.enums.CashSessionStatus {
+    return com.litvy.litvysales.data.local.entity.enums.CashSessionStatus.valueOf(this.name)
+}
+
+fun com.litvy.litvysales.data.local.entity.enums.CashSessionStatus.toDomain():
+        com.litvy.litvysales.domain.model.enums.CashSessionStatus {
+    return com.litvy.litvysales.domain.model.enums.CashSessionStatus.valueOf(this.name)
+}
+
 fun CashSession.toEntity(): CashSessionEntity =
     CashSessionEntity(
         id = id,
@@ -71,7 +81,8 @@ fun CashSession.toEntity(): CashSessionEntity =
         closingAmountInCents = closingAmountInCents,
         expectedAmountInCents = expectedAmountInCents,
         differenceInCents = differenceInCents,
-        status = status,
+        differenceJustification = differenceJustification,
+        status = status.toEntity(),
         openedBy = openedBy,
         closedBy = closedBy
     )
@@ -86,9 +97,30 @@ fun CashSessionEntity.toDomain(): CashSession =
         closingAmountInCents = closingAmountInCents,
         expectedAmountInCents = expectedAmountInCents,
         differenceInCents = differenceInCents,
-        status = status,
+        differenceJustification = differenceJustification,
+        status = status.toDomain(),
         openedBy = openedBy,
         closedBy = closedBy
+    )
+
+fun CashSessionSchedule.toEntity(): CashSessionScheduleEntity =
+    CashSessionScheduleEntity(
+        id = id,
+        title = title,
+        dayOfWeek = dayOfWeek,
+        openMinuteOfDay = openMinuteOfDay,
+        closeMinuteOfDay = closeMinuteOfDay,
+        active = active
+    )
+
+fun CashSessionScheduleEntity.toDomain(): CashSessionSchedule =
+    CashSessionSchedule(
+        id = id,
+        title = title,
+        dayOfWeek = dayOfWeek,
+        openMinuteOfDay = openMinuteOfDay,
+        closeMinuteOfDay = closeMinuteOfDay,
+        active = active
     )
 
 

@@ -17,6 +17,7 @@ import com.litvy.litvysales.domain.useCase.catalog.category.GetCategoriesUseCase
 import com.litvy.litvysales.domain.useCase.catalog.product.GetActiveProductsUseCase
 import com.litvy.litvysales.domain.useCase.catalog.subCategory.GetSubCategoriesByCategoryUseCase
 import com.litvy.litvysales.domain.useCase.sales.CreateSaleUseCase
+import com.litvy.litvysales.domain.useCase.sales.CreateSaleWithCashSessionUseCase
 import com.litvy.litvysales.domain.useCase.sales.ValidateSaleUseCase
 import com.litvy.litvysales.domain.useCase.sales.paymentmethod.GetPaymentMethodsUseCase
 import com.litvy.litvysales.domain.validation.ValidationResult
@@ -36,7 +37,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToLong
 
 class SalesViewModel(
-    private val createSaleUseCase: CreateSaleUseCase,
+    private val createSaleUseCase: CreateSaleWithCashSessionUseCase,
     private val validateSaleUseCase: ValidateSaleUseCase,
     private val getPaymentMethodsUseCase: GetPaymentMethodsUseCase,
     private val getProductsUseCase: GetActiveProductsUseCase,
@@ -472,7 +473,7 @@ class SalesViewModel(
         }
 
         val sale = Sale(
-            cashSessionId = 1,
+            cashSessionId = 0,
             sellerId = 1,
             customerId = null,
             totalDiscountInCents = 0,
@@ -681,7 +682,7 @@ class SalesViewModel(
 }
 
 class SalesViewModelFactory(
-    private val createSaleUseCase: CreateSaleUseCase,
+    private val createSaleUseCase: CreateSaleWithCashSessionUseCase,
     private val validateSaleUseCase: ValidateSaleUseCase,
     private val getPaymentMethodsUseCase: GetPaymentMethodsUseCase,
     private val getProductsUseCase: GetActiveProductsUseCase,

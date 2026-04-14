@@ -384,6 +384,11 @@ class CatalogViewModel(
 
                     if(handleValidationResult(result)){
 
+                        getProducts(event.brandId).collect { products ->
+                            _state.value = _state.value.copy(
+                                products = products
+                            )
+                        }
                     }
                 }
             }

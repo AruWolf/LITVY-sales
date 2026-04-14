@@ -12,6 +12,7 @@ import com.litvy.litvysales.ui.catalog.util.CatalogState
 @Composable
 fun ProductListScreen(
     state: CatalogState,
+    onEdit: (Int) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -19,7 +20,7 @@ fun ProductListScreen(
             .padding(16.dp)
     ) {
 
-        ProductTable(state = state)
+        ProductTable(state = state, onEdit = onEdit)
 
     }
 

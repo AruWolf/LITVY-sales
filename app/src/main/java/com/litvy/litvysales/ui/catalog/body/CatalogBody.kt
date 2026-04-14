@@ -18,7 +18,8 @@ fun CatalogBody(
     if(state.level == CatalogLevel.PRODUCTS){
 
         ProductListScreen(
-            state = state
+            state = state,
+            onEdit = onEdit
         )
 
     } else { // De lo contrario, se construyen los items mediante el diseño de grilla

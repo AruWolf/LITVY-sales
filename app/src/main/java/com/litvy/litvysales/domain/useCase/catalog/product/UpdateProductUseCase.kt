@@ -36,7 +36,7 @@ class UpdateProductUseCase(
             )
 
         validator.check(
-            repository.existsByNameInBrandExcludingId(cleanName, brandId, id),
+            !repository.existsByNameInBrandExcludingId(cleanName, brandId, id),
             "name",
             "El producto ya existe en la marca"
         )
