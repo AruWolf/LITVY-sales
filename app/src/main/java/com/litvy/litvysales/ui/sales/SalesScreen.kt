@@ -1,9 +1,11 @@
 package com.litvy.litvysales.ui.sales
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -68,6 +71,9 @@ fun SalesScreen(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
     LaunchedEffect(state.feedbackMessage) {
         val message = state.feedbackMessage ?: return@LaunchedEffect
         snackbarHostState.showSnackbar(
@@ -77,6 +83,13 @@ fun SalesScreen(
         onEvent(SalesEvent.DismissFeedback)
     }
 
+    if (isLandscape) {
+        SalesLandscapeContent(state, onEvent)
+    } else {
+        SalesPortraitContent(state, onEvent)
+    }
+
+    /*
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { innerPadding ->
@@ -133,7 +146,7 @@ fun SalesScreen(
                 onConfirm = { onEvent(SalesEvent.ConfirmSale) }
             )
         }
-    }
+    }*/
 
     if (state.showAddProductDialog) {
         AddProductDialog(
@@ -153,5 +166,139 @@ fun SalesScreen(
             onDelete = { onEvent(SalesEvent.DeleteItem(state.editItemState.productId)) },
             onDismiss = { onEvent(SalesEvent.CloseEditItemDialog) }
         )
+    }
+}
+
+@Composable
+private fun SalesPortraitContent(
+    state: SalesState,
+    onEvent: (SalesEvent) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Registrar venta",
+                style = MaterialTheme.typography.headlineSmall
+            )
+
+            Button(
+                onClick = { onEvent(SalesEvent.OpenAddProductDialog) }
+            ) {
+                Text("Agregar producto")
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        CartSection(
+            items = state.draft.items,
+            itemsError = state.itemsError,
+            modifier = Modifier.weight(1f),
+            onEditItem = { onEvent(SalesEvent.OpenEditItemDialog(it)) },
+            onDeleteItem = { onEvent(SalesEvent.DeleteItem(it)) }
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        PaymentSection(
+            paymentMethods = state.paymentMethods,
+            selectedPaymentMethodId = state.selectedPaymentMethodId,
+            paymentMethodError = state.paymentMethodError,
+            onSelectPaymentMethod = { onEvent(SalesEvent.SelectPaymentMethod(it)) }
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        FooterSection(
+            subtotal = state.draft.subtotal,
+            surcharge = state.draft.surcharge,
+            total = state.draft.total,
+            isSubmitting = state.isSubmitting,
+            canConfirm = state.canConfirm,
+            onConfirm = { onEvent(SalesEvent.ConfirmSale) }
+        )
+    }
+}
+
+@Composable
+private fun SalesLandscapeContent(
+    state: SalesState,
+    onEvent: (SalesEvent) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+
+        Column(
+            modifier = Modifier
+                .weight(0.7f)
+                .fillMaxHeight()
+        ) {
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Registrar venta",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+
+                Button(
+                    onClick = { onEvent(SalesEvent.OpenAddProductDialog) }
+                ) {
+                    Text("Agregar producto")
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            CartSection(
+                items = state.draft.items,
+                itemsError = state.itemsError,
+                modifier = Modifier.weight(1f),
+                onEditItem = { onEvent(SalesEvent.OpenEditItemDialog(it)) },
+                onDeleteItem = { onEvent(SalesEvent.DeleteItem(it)) },
+                compact = true
+            )
+        }
+
+        Spacer(Modifier.width(16.dp))
+
+        Column(
+            modifier = Modifier
+                .weight(0.3f)
+                .fillMaxHeight()
+        ) {
+
+            PaymentSection(
+                paymentMethods = state.paymentMethods,
+                selectedPaymentMethodId = state.selectedPaymentMethodId,
+                paymentMethodError = state.paymentMethodError,
+                onSelectPaymentMethod = { onEvent(SalesEvent.SelectPaymentMethod(it)) }
+            )
+
+            Spacer(Modifier.weight(1f))
+
+            FooterSection(
+                subtotal = state.draft.subtotal,
+                surcharge = state.draft.surcharge,
+                total = state.draft.total,
+                isSubmitting = state.isSubmitting,
+                canConfirm = state.canConfirm,
+                onConfirm = { onEvent(SalesEvent.ConfirmSale) }
+            )
+        }
     }
 }

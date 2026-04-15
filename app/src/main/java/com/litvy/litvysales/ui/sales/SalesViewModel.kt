@@ -79,6 +79,7 @@ class SalesViewModel(
             is SalesEvent.SelectPaymentMethod -> selectPaymentMethod(event.method)
             SalesEvent.ConfirmSale -> confirmSale()
             SalesEvent.DismissFeedback -> dismissFeedback()
+
         }
     }
 

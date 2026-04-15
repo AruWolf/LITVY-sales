@@ -40,4 +40,6 @@ sealed interface SalesEvent {
     data object ConfirmSale : SalesEvent
 
     data object DismissFeedback : SalesEvent
+
+
 }

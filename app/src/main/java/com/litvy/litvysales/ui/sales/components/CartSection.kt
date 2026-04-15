@@ -3,9 +3,12 @@ package com.litvy.litvysales.ui.sales.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -30,8 +33,11 @@ fun CartSection(
     itemsError: String?,
     onEditItem: (Int) -> Unit,
     onDeleteItem: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    compact: Boolean = false
 ) {
+
+
     Column(
         modifier = modifier.fillMaxSize()
     ) {
@@ -72,55 +78,133 @@ fun CartSection(
                 .padding(top = 12.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            items(items, key = { it.productId }) { item ->
-                Card(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = item.name,
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.weight(1f)
-                            )
 
-                            Row {
-                                IconButton(onClick = { onEditItem(item.productId) }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = "Editar producto"
-                                    )
-                                }
-                                IconButton(onClick = { onDeleteItem(item.productId) }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Eliminar producto"
-                                    )
+
+
+            items(items, key = { it.productId }) { item ->
+
+                if (compact) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = item.name,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                Row {
+                                    IconButton(
+                                        onClick = { onEditItem(item.productId) },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = "Editar",
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+
+                                    IconButton(
+                                        onClick = { onDeleteItem(item.productId) },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Eliminar",
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
                                 }
                             }
-                        }
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text("Cantidad: ${item.quantity.toDisplayString()}")
-                            Text("Unitario: ${MoneyFormatter.formatFromCents(item.unitPrice)}")
-                        }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
 
-                        Text(
-                            text = "Total: ${MoneyFormatter.formatFromCents(item.total)}",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                                Text(
+                                    text = "Cant: ${item.quantity.toDisplayString()}",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+
+                                Spacer(Modifier.width(12.dp))
+
+                                Text(
+                                    text = "Unit: ${MoneyFormatter.formatFromCents(item.unitPrice)}",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+
+                                Spacer(Modifier.weight(1f))
+
+                                Text(
+                                    text = MoneyFormatter.formatFromCents(item.total),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
                     }
                 }
+                else{
+                    Card(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = item.name,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                Row {
+                                    IconButton(onClick = { onEditItem(item.productId) }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = "Editar producto"
+                                        )
+                                    }
+                                    IconButton(onClick = { onDeleteItem(item.productId) }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Eliminar producto"
+                                        )
+                                    }
+                                }
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Cantidad: ${item.quantity.toDisplayString()}")
+                                Text("Unitario: ${MoneyFormatter.formatFromCents(item.unitPrice)}")
+                            }
+
+                            Text(
+                                text = "Total: ${MoneyFormatter.formatFromCents(item.total)}",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+
             }
         }
     }

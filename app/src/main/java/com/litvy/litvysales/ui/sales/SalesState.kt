@@ -16,7 +16,8 @@ data class SalesState(
     val showAddProductDialog: Boolean = false,
     val addProductState: AddProductDialogState = AddProductDialogState(),
     val showEditItemDialog: Boolean = false,
-    val editItemState: EditSaleItemState? = null
+    val editItemState: EditSaleItemState? = null,
+
 ) {
     val selectedPaymentMethodId: Int?
         get() = draft.payments.firstOrNull()?.paymentMethodId

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
@@ -102,7 +103,7 @@ fun CashSessionListScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -122,7 +123,7 @@ fun CashSessionListScreen(
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(8.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -162,8 +163,12 @@ fun CashSessionListScreen(
                         modifier = Modifier.weight(0.7f),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(state.sessions, key = { it.sessionId }) { session ->
-                            CashSessionSummaryCard(session = session, onOpenSession = onOpenSession)
+                        itemsIndexed(state.sessions, key = { _, it -> it.sessionId }) { index, session ->
+                            CashSessionSummaryCard(
+                                session = session,
+                                index = index,
+                                onOpenSession = onOpenSession
+                            )
                         }
                     }
 
@@ -188,8 +193,15 @@ fun CashSessionListScreen(
                 }
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(state.sessions, key = { it.sessionId }) { session ->
-                        CashSessionSummaryCard(session = session, onOpenSession = onOpenSession)
+                    itemsIndexed(
+                        state.sessions,
+                        key = { _, it -> it.sessionId }
+                    ) { index, session ->
+                        CashSessionSummaryCard(
+                            session = session,
+                            index = index,
+                            onOpenSession = onOpenSession
+                        )
                     }
                 }
             }
@@ -261,25 +273,43 @@ fun CashSessionListScreen(
             ) {
                 Surface(
                     modifier = Modifier
-                        .fillMaxWidth(0.6f)
+                        .fillMaxWidth(0.75f)
                         .widthIn(min = 420.dp),
                     shape = MaterialTheme.shapes.large
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        DatePicker(
-                            state = datePickerState,
-                            modifier = Modifier.graphicsLayer(scaleX = 0.92f, scaleY = 0.92f)
-                        )
-                        Button(
-                            onClick = {
-                                datePickerState.selectedDateMillis?.let {
-                                    onEvent(CashSessionListEvent.SelectDate(it))
-                                }
-                                showDatePicker = false
-                            },
-                            modifier = Modifier.fillMaxWidth()
+                    Column {
+                        LazyColumn(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(12.dp)
                         ) {
-                            Text("Aceptar")
+                            item {
+                                DatePicker(
+                                    state = datePickerState,
+                                    modifier = Modifier.graphicsLayer(
+                                        scaleX = 0.78f,
+                                        scaleY = 0.78f
+                                    )
+                                )
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Button(
+                                onClick = {
+                                    datePickerState.selectedDateMillis?.let {
+                                        onEvent(CashSessionListEvent.SelectDate(it))
+                                    }
+                                    showDatePicker = false
+                                }
+                            ) {
+                                Text("Aceptar")
+                            }
                         }
                     }
                 }
@@ -309,26 +339,59 @@ fun CashSessionListScreen(
 @Composable
 private fun CashSessionSummaryCard(
     session: CashSessionSummary,
+    index: Int,
     onOpenSession: (Int) -> Unit
 ) {
+    val isLandscape = LocalConfiguration.current.orientation ==
+            android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = { onOpenSession(session.sessionId) }
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(
+                horizontal = 12.dp,
+                vertical = if (isLandscape) 10.dp else 16.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
-                text = "Apertura: ${CashSessionUiFormatters.formatTime(session.startedAt)}",
+                text = "Sesión #${index + 1}",
                 style = MaterialTheme.typography.titleMedium
             )
-            Text("Cierre: ${session.closedAt?.let(CashSessionUiFormatters::formatTime) ?: "Abierta"}")
-            Text("Usuario: ${session.openedByLabel}")
-            Text(
-                text = "Total vendido: ${MoneyFormatter.formatFromCents(session.totalSoldInCents)}",
-                style = MaterialTheme.typography.bodyLarge
-            )
+
+            if (isLandscape) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text("Apertura: ${CashSessionUiFormatters.formatTime(session.startedAt)}")
+                        Text("Cierre: ${
+                            session.closedAt?.let(CashSessionUiFormatters::formatTime)
+                                ?: "Abierta"
+                        }")
+                        Text("Usuario: ${session.openedByLabel}")
+                    }
+
+                    Text(
+                        text = MoneyFormatter.formatFromCents(session.totalSoldInCents),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            } else {
+                Text("Apertura: ${CashSessionUiFormatters.formatTime(session.startedAt)}")
+                Text("Cierre: ${session.closedAt?.let(CashSessionUiFormatters::formatTime) ?: "Abierta"}")
+                Text("Usuario: ${session.openedByLabel}")
+                Text(
+                    text = "Total vendido: ${MoneyFormatter.formatFromCents(session.totalSoldInCents)}",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
         }
     }
 }

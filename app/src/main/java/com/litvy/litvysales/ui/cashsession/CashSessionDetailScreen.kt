@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExpandLess
@@ -121,10 +122,41 @@ fun CashSessionDetailScreen(
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.weight(1f)
                 )
-                OutlinedButton(onClick = { onEvent(CashSessionDetailEvent.OpenMovementDialog) }) {
-                    Icon(Icons.Default.Payments, contentDescription = null)
-                    Text("Movimiento")
-                }
+                    if (isLandscape && detail != null) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+
+                            if (shouldShowJustificationButton(detail)) {
+                                Button(
+                                    onClick = { onEvent(CashSessionDetailEvent.OpenJustificationDialog) }
+                                ) {
+                                    Text("Justificar Diferencia")
+                                }
+                            }
+
+                            if (detail.session.closedAt == null) {
+
+                                OutlinedButton(
+                                    onClick = { onEvent(CashSessionDetailEvent.OpenMovementDialog) }
+                                ) {
+                                    Icon(Icons.Default.Payments, contentDescription = null)
+                                    Text("Movimiento")
+                                }
+
+                                Button(
+                                    onClick = { onEvent(CashSessionDetailEvent.OpenCloseDialog) }
+                                ) {
+                                    Text("Cerrar Sesión")
+                                }
+                            }
+                        }
+                    } else if (detail?.session?.closedAt == null) {
+                        OutlinedButton(
+                            onClick = { onEvent(CashSessionDetailEvent.OpenMovementDialog) }
+                        ) {
+                            Icon(Icons.Default.Payments, contentDescription = null)
+                            Text("Movimiento")
+                        }
+                    }
             }
 
             if (detail == null) {
@@ -155,22 +187,7 @@ fun CashSessionDetailScreen(
                         modifier = Modifier.weight(0.38f),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        if (shouldShowJustificationButton(detail)) {
-                            Button(
-                                onClick = { onEvent(CashSessionDetailEvent.OpenJustificationDialog) },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text("Justificar diferencia")
-                            }
-                        }
-                        if (detail.session.closedAt == null) {
-                            Button(
-                                onClick = { onEvent(CashSessionDetailEvent.OpenCloseDialog) },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text("Cerrar sesión")
-                            }
-                        }
+
                         CashSessionAmountsCard(
                             detail = detail,
                             expanded = true,
@@ -220,14 +237,45 @@ fun CashSessionDetailScreen(
 
 @Composable
 private fun CashSessionHeaderCard(detail: CashSessionDetail) {
+    val isLandscape = LocalConfiguration.current.orientation ==
+            android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
+    val justification = detail.session.differenceJustification
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Text("Apertura: ${CashSessionUiFormatters.formatTime(detail.session.startedAt)}")
-            Text("Cierre: ${detail.session.closedAt?.let(CashSessionUiFormatters::formatTime) ?: "Abierta"}")
-            Text("Usuario: Usuario #${detail.session.openedBy}")
+        if (isLandscape) {
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Apertura: ${CashSessionUiFormatters.formatTime(detail.session.startedAt)}")
+
+                Text("Cierre: ${detail.session.closedAt?.let(CashSessionUiFormatters::formatTime) ?: "Abierta"}")
+
+                Text("Usuario: Usuario #${detail.session.openedBy}")
+
+                if (!justification.isNullOrBlank()) {
+                    Text(
+                        text = "Justificación: $justification",
+                        color = MaterialTheme.colorScheme.error,
+                        maxLines = 1
+                    )
+                }
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text("Apertura: ${CashSessionUiFormatters.formatTime(detail.session.startedAt)}")
+                Text("Cierre: ${detail.session.closedAt?.let(CashSessionUiFormatters::formatTime) ?: "Abierta"}")
+                Text("Usuario: Usuario #${detail.session.openedBy}")
+            }
         }
     }
 }
@@ -256,9 +304,9 @@ private fun CashSessionTimelineList(
                 Text("Ventas y movimientos", style = MaterialTheme.typography.titleLarge)
             }
 
-            items(entries, key = { entryKey(it) }) { entry ->
+            itemsIndexed(entries, key = { _, it -> entryKey(it) }) { index, entry ->
                 when (entry) {
-                    is TimelineEntry.SaleEntry -> SaleSummaryItem(entry.sale, onEvent)
+                    is TimelineEntry.SaleEntry -> SaleSummaryItem(entry.sale, index, onEvent)
                     is TimelineEntry.MovementEntry -> MovementSummaryItem(entry.movement)
                 }
             }
@@ -269,35 +317,78 @@ private fun CashSessionTimelineList(
 @Composable
 private fun SaleSummaryItem(
     sale: CashSessionSaleSummary,
+    index: Int,
     onEvent: (CashSessionDetailEvent) -> Unit
 ) {
+    val isLandscape = LocalConfiguration.current.orientation ==
+            android.content.res.Configuration.ORIENTATION_LANDSCAPE
     Card(
         modifier = Modifier.fillMaxWidth(),
         onClick = { onEvent(CashSessionDetailEvent.OpenSaleDetail(sale.saleId)) }
     ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Text(
-                text = "Venta ${sale.saleId}",
-                style = MaterialTheme.typography.titleMedium
-            )
-            HorizontalDivider()
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Hora")
-                Text(CashSessionUiFormatters.formatTime(sale.createdAt))
-            }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Items")
-                Text("${sale.itemCount}")
-            }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Total")
+
+        if (isLandscape) {
+            Column(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
                 Text(
-                    MoneyFormatter.formatFromCents(sale.totalInCents),
-                    fontWeight = FontWeight.SemiBold
+                    text = "Venta ${index + 1}",
+                    style = MaterialTheme.typography.titleSmall
                 )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text("Hora: ${CashSessionUiFormatters.formatTime(sale.createdAt)}")
+                        Text("Items: ${sale.itemCount}")
+                    }
+
+                    Text(
+                        MoneyFormatter.formatFromCents(sale.totalInCents),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }else {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = "Venta ${index + 1}",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                HorizontalDivider()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Hora")
+                    Text(CashSessionUiFormatters.formatTime(sale.createdAt))
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Items")
+                    Text("${sale.itemCount}")
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Total")
+                    Text(
+                        MoneyFormatter.formatFromCents(sale.totalInCents),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }
@@ -308,35 +399,81 @@ private fun MovementSummaryItem(movement: CashMovement) {
     val background = if (movement.type == "IN") Color(0xFFEAF7EE) else Color(0xFFFBECEC)
     val accent = if (movement.type == "IN") Color(0xFF2E7D32) else Color(0xFFC62828)
 
+    val isLandscape = LocalConfiguration.current.orientation ==
+            android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = background)
     ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Text(
-                text = if (movement.type == "IN") "Ingreso de efectivo" else "Extracción de efectivo",
-                style = MaterialTheme.typography.titleMedium,
-                color = accent
-            )
-            HorizontalDivider(color = accent.copy(alpha = 0.25f))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Hora")
-                Text(CashSessionUiFormatters.formatTime(movement.createdAt))
-            }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Motivo")
-                Text(movement.reason ?: "-", textAlign = TextAlign.End)
-            }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Monto")
+
+        if (isLandscape) {
+            Column(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
                 Text(
-                    MoneyFormatter.formatFromCents(movement.amountInCents),
-                    color = accent,
-                    fontWeight = FontWeight.SemiBold
+                    text = if (movement.type == "IN") "Ingreso" else "Extracción",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = accent
                 )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text("Hora: ${CashSessionUiFormatters.formatTime(movement.createdAt)}")
+                        Text("Motivo: ${movement.reason ?: "-"}")
+                    }
+
+                    Text(
+                        MoneyFormatter.formatFromCents(movement.amountInCents),
+                        color = accent,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }else {
+
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = if (movement.type == "IN") "Ingreso de efectivo" else "Extracción de efectivo",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = accent
+                )
+                HorizontalDivider(color = accent.copy(alpha = 0.25f))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Hora")
+                    Text(CashSessionUiFormatters.formatTime(movement.createdAt))
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Motivo")
+                    Text(movement.reason ?: "-", textAlign = TextAlign.End)
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Monto")
+                    Text(
+                        MoneyFormatter.formatFromCents(movement.amountInCents),
+                        color = accent,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }
@@ -348,43 +485,64 @@ private fun CashSessionAmountsCard(
     expanded: Boolean,
     onToggleExpanded: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onToggleExpanded
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+    val isLandscape = LocalConfiguration.current.orientation ==
+            android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
+    if (isLandscape) {
+        Card(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text("Monto final", style = MaterialTheme.typography.labelLarge)
-                    Text(
-                        detail.session.closingAmountInCents?.let(MoneyFormatter::formatFromCents) ?: "-",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-                Icon(
-                    imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = null
+            AmountsContent(detail, expanded = true)
+        }
+    } else {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onToggleExpanded
+        ) {
+            AmountsContent(detail, expanded = expanded)
+        }
+    }
+}
+
+@Composable
+private fun AmountsContent(
+    detail: CashSessionDetail,
+    expanded: Boolean
+) {
+    Column(
+        modifier = Modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text("Monto final")
+                Text(
+                    detail.session.closingAmountInCents
+                        ?.let(MoneyFormatter::formatFromCents) ?: "-"
                 )
             }
 
-            AnimatedVisibility(visible = expanded) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    HorizontalDivider()
-                    AmountRow("Monto inicial", MoneyFormatter.formatFromCents(detail.session.openingAmountInCents))
-                    AmountRow("Monto esperado", MoneyFormatter.formatFromCents(detail.expectedAmountInCents))
-                    AmountRow("Total vendido", MoneyFormatter.formatFromCents(detail.totalSoldInCents))
-                    AmountRow(
-                        "Diferencia",
-                        detail.session.differenceInCents?.let(MoneyFormatter::formatFromCents) ?: "-"
-                    )
-                }
+            if (!expanded) {
+                Icon(Icons.Default.ExpandMore, null)
+            } else {
+                Icon(Icons.Default.ExpandLess, null)
+            }
+        }
+
+        AnimatedVisibility(visible = expanded) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                HorizontalDivider()
+                AmountRow("Monto inicial", MoneyFormatter.formatFromCents(detail.session.openingAmountInCents))
+                AmountRow("Monto esperado", MoneyFormatter.formatFromCents(detail.expectedAmountInCents))
+                AmountRow("Total vendido", MoneyFormatter.formatFromCents(detail.totalSoldInCents))
+                AmountRow(
+                    "Diferencia",
+                    detail.session.differenceInCents?.let(MoneyFormatter::formatFromCents) ?: "-"
+                )
             }
         }
     }
@@ -512,7 +670,7 @@ private fun CloseDialog(
         },
         confirmButton = {
             Button(onClick = { onEvent(CashSessionDetailEvent.ConfirmCloseSession) }) {
-                Text("Cerrar")
+                Text("Cerrar Sesión")
             }
         },
         dismissButton = {
